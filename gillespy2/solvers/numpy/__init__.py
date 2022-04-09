@@ -20,7 +20,7 @@ import logging
 _formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 _handler = logging.StreamHandler()
 _handler.setFormatter(_formatter)
-log = logging.getLogger("NumpySolvers")
+log = logging.getLogger()
 log.setLevel(logging.WARN)
 log.addHandler(_handler)
 
