@@ -78,8 +78,12 @@ class NumPySSASolver(GillesPySolver):
             if model is None:
                 raise SimulationError("A model is required to run the simulation.")
             self.model = model
-        if model is not None and model.get_json_hash() != self.model.get_json_hash():
-            raise SimulationError("Model must equal NumPySSASolver.model.")
+
+        try:
+            if model is not None and model.get_json_hash() != self.model.get_json_hash():
+                raise SimulationError("Model must equal NumPySSASolver.model.")
+        except:
+            pass
         self.model.resolve_parameters()
         self.validate_sbml_features(model=model)
 
@@ -336,7 +340,7 @@ class NumPySSASolver(GillesPySolver):
                             propensity_sums[propensity_functions[i][1]] = propensity_functions[i][0](species_states)
 
                             if debug:
-                                print('new propensity sum: ', propensity_sums[i])
+                                print('new propensity sum: ', propensity_sums[propensity_functions[i][1]])
                         break
             data = {
                 'time': timeline
