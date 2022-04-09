@@ -36,7 +36,7 @@ _formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(messa
 _handler = logging.StreamHandler()
 _handler.setFormatter(_formatter)
 version = __version__
-log = logging.getLogger()
+log = logging.getLogger("Gillespy2")
 log.setLevel(logging.WARN)
 log.addHandler(_handler)
 
