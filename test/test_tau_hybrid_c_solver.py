@@ -10,25 +10,25 @@ from gillespy2.core.gillespyError import SimulationError
 class BoundaryConditionTestModel(gillespy2.Model):
     def __init__(self):
         gillespy2.Model.__init__(self, name="BoundaryConditionTestModel")
-        s1 = gillespy2.Species(name="S1", boundary_condition=True, initial_value=0.001, mode='continuous')
-        s2 = gillespy2.Species(name="S2", boundary_condition=False, initial_value=0.002, mode='continuous')
-        s3 = gillespy2.Species(name="S3", boundary_condition=False, initial_value=0.001, mode='continuous')
-        s4 = gillespy2.Species(name="S4", boundary_condition=True, initial_value=0.002, mode='continuous')
+        s1 = gillespy2.Species(name="S1", boundary_condition=True, initial_value=0.001, mode="continuous")
+        s2 = gillespy2.Species(name="S2", boundary_condition=False, initial_value=0.002, mode="continuous")
+        s3 = gillespy2.Species(name="S3", boundary_condition=False, initial_value=0.001, mode="continuous")
+        s4 = gillespy2.Species(name="S4", boundary_condition=True, initial_value=0.002, mode="continuous")
         self.add_species([s1, s2, s3, s4])
 
         k1 = gillespy2.Parameter(name="k1", expression="0.75")
         k2 = gillespy2.Parameter(name="k2", expression="0.25")
         self.add_parameter([k1, k2])
 
-        reaction1 = gillespy2.Reaction(name="reaction1", propensity_function="vol*k1*S1*S2",
-                                       reactants={s1: 1, s2: 1},
-                                       products={s3: 1})
-        reaction2 = gillespy2.Reaction(name="reaction2", propensity_function="vol*k2*S3",
-                                       reactants={s3: 1},
-                                       products={s1: 1, s2: 1})
-        reaction3 = gillespy2.Reaction(name="reaction3", propensity_function="vol*k2*S3",
-                                       reactants={s1: 1, s2: 2, s3: 1},
-                                       products={s4: 1})
+        reaction1 = gillespy2.Reaction(
+            name="reaction1", propensity_function="vol*k1*S1*S2", reactants={s1: 1, s2: 1}, products={s3: 1}
+        )
+        reaction2 = gillespy2.Reaction(
+            name="reaction2", propensity_function="vol*k2*S3", reactants={s3: 1}, products={s1: 1, s2: 1}
+        )
+        reaction3 = gillespy2.Reaction(
+            name="reaction3", propensity_function="vol*k2*S3", reactants={s1: 1, s2: 2, s3: 1}, products={s4: 1}
+        )
         self.add_reaction([reaction1, reaction2, reaction3])
 
         self.timespan(numpy.linspace(0, 20, 51))
@@ -39,9 +39,9 @@ class BoundaryConditionTestModel(gillespy2.Model):
 class RateRuleTestModel(gillespy2.Model):
     def __init__(self):
         gillespy2.Model.__init__(self, name="RateRuleTestModel")
-        s1 = gillespy2.Species(name="S1", initial_value=0.015, mode='continuous')
-        s2 = gillespy2.Species(name="S2", initial_value=0.0, mode='continuous')
-        s3 = gillespy2.Species(name="S3", initial_value=1.0, mode='continuous')
+        s1 = gillespy2.Species(name="S1", initial_value=0.015, mode="continuous")
+        s2 = gillespy2.Species(name="S2", initial_value=0.0, mode="continuous")
+        s3 = gillespy2.Species(name="S3", initial_value=1.0, mode="continuous")
         self.add_species([s1, s2, s3])
 
         k1 = gillespy2.Parameter(name="k1", expression="1.0")
@@ -78,8 +78,10 @@ class TestTauHybridCSolver(unittest.TestCase):
         results = model.run(solver=TauHybridCSolver, number_of_trajectories=1)
 
         for spec_name, species in model.listOfSpecies.items():
-            with self.subTest(msg="Unexpected species output for boundary condition setting",
-                              boundary_condition=species.boundary_condition):
+            with self.subTest(
+                msg="Unexpected species output for boundary condition setting",
+                boundary_condition=species.boundary_condition,
+            ):
                 spec_results = results[spec_name]
                 is_uniform = numpy.all(spec_results == species.initial_value)
                 self.assertTrue(species.boundary_condition == is_uniform)
@@ -98,5 +100,5 @@ class TestTauHybridCSolver(unittest.TestCase):
             results = TauHybridCSolver.run(model=model, increment=0.2)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

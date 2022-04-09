@@ -382,7 +382,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">massaction</span> <span class="o">=</span> <span class="kc">False</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;customized&#39;</span> <span class="k">else</span> <span class="kc">True</span></div>
 
-<div class="viewcode-block" id="Reaction.addReactant"><a class="viewcode-back" href="../../../classes/gillespy2.core.html#gillespy2.core.reaction.Reaction.addReactant">[docs]</a>    <span class="k">def</span> <span class="nf">addReactant</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">stoichiometry</span><span class="p">):</span>
+<div class="viewcode-block" id="Reaction.add_reactant"><a class="viewcode-back" href="../../../classes/gillespy2.core.html#gillespy2.core.reaction.Reaction.add_reactant">[docs]</a>    <span class="k">def</span> <span class="nf">add_reactant</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">stoichiometry</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Adds a reactant to the reaction (species that is consumed)</span>
 
@@ -396,7 +396,7 @@
 <span class="s2">                                    positive integer.&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">reactants</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">stoichiometry</span></div>
 
-<div class="viewcode-block" id="Reaction.addProduct"><a class="viewcode-back" href="../../../classes/gillespy2.core.html#gillespy2.core.reaction.Reaction.addProduct">[docs]</a>    <span class="k">def</span> <span class="nf">addProduct</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">stoichiometry</span><span class="p">):</span>
+<div class="viewcode-block" id="Reaction.add_product"><a class="viewcode-back" href="../../../classes/gillespy2.core.html#gillespy2.core.reaction.Reaction.add_product">[docs]</a>    <span class="k">def</span> <span class="nf">add_product</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">S</span><span class="p">,</span> <span class="n">stoichiometry</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Adds a product to the reaction (species that is created)</span>
 
@@ -407,7 +407,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">products</span><span class="p">[</span><span class="n">S</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">stoichiometry</span></div>
 
-<div class="viewcode-block" id="Reaction.Annotate"><a class="viewcode-back" href="../../../classes/gillespy2.core.html#gillespy2.core.reaction.Reaction.Annotate">[docs]</a>    <span class="k">def</span> <span class="nf">Annotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">annotation</span><span class="p">):</span>
+<div class="viewcode-block" id="Reaction.annotate"><a class="viewcode-back" href="../../../classes/gillespy2.core.html#gillespy2.core.reaction.Reaction.annotate">[docs]</a>    <span class="k">def</span> <span class="nf">annotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">annotation</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Adds a note to the reaction</span>
 

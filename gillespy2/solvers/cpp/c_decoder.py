@@ -16,12 +16,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import io
 import abc
-import numpy
+import io
+from abc import ABC
 from collections import deque
 from typing import Callable
-from abc import ABC
+
+import numpy
+
 
 class SimDecoder(ABC):
     """
@@ -32,7 +34,7 @@ class SimDecoder(ABC):
     :param trajectories: 3D array to output simulation data to.
     :type trajectories: numpy.array
     """
-    
+
     def __init__(self, trajectories: numpy.ndarray):
         """
         Constructor for simulation decoder class.
@@ -92,10 +94,12 @@ class SimDecoder(ABC):
         """
         pass
 
+
 class BasicSimDecoder(SimDecoder):
     """
     Simple decoder which returns the results as a complete string.
     """
+
     def __init__(self, trajectories: numpy.ndarray):
         super(BasicSimDecoder, self).__init__(trajectories)
         self.buffer = []
@@ -234,8 +238,7 @@ class IterativeSimDecoder(SimDecoder):
                 self.trajectories[traj_id][t] = [current_timestep.popleft() for _ in range(entries_per_timestep)]
                 # First value of each timestep is the current time of the simulation.
                 # The remaining entries of each timestep are the output state at that time.
-                self.callback(self.trajectories[traj_id][t][0],
-                              self.trajectories[traj_id][t][1:])
+                self.callback(self.trajectories[traj_id][t][0], self.trajectories[traj_id][t][1:])
                 t += 1
                 if t >= num_timesteps:
                     traj_id += 1

@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+
 class PerformanceEntry:
     perf_time: float = 0.0
     percent: float = 0.0
@@ -23,6 +24,7 @@ class PerformanceEntry:
     def __init__(self, t=0.0, percent=0.0):
         self.perf_time = float(t) * 1000
         self.percent = float(percent)
+
 
 class PerformanceData:
     # Value in ms representing time spent overall by the executable.

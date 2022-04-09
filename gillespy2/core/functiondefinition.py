@@ -18,8 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import uuid
 
-from gillespy2.core.sortableobject import SortableObject
 from gillespy2.core.jsonify import Jsonify
+from gillespy2.core.sortableobject import SortableObject
+
 
 class FunctionDefinition(SortableObject, Jsonify):
     """
@@ -32,21 +33,20 @@ class FunctionDefinition(SortableObject, Jsonify):
     :param function: Defined function body of operation to be performed.
     :type function: str
 
-    :param variables: String names of Variables to be used as arguments to function.
-    :type variables: list[str]
+    :param args: String names of Variables to be used as arguments to function.
+    :type args: list[str]
     """
 
-    def __init__(self, name="", function=None, args=[]):
+    def __init__(self, name="", function=None, args=None):
         if function is None:
             raise TypeError("Function string provided for FunctionDefinition cannot be None")
 
         if name in (None, ""):
-            self.name = f'fd{uuid.uuid4()}'.replace('-', '_')
+            self.name = f"fd{uuid.uuid4()}".replace("-", "_")
         else:
             self.name = name
         self.function_string = function
         self.args = args
-
 
     def __str__(self):
         return f"{self.name}: Args: {self.args}, Expression: {self.function_string}"
@@ -57,14 +57,16 @@ class FunctionDefinition(SortableObject, Jsonify):
 
         :returns: Argument list as a comma-separated formatted string.
         """
-        return ','.join(self.args)
+        return ",".join(self.args)
 
     def sanitized_function(self, species_mappings, parameter_mappings):
-        names = sorted(list(species_mappings.keys()) + list(parameter_mappings.keys()), key=lambda x: len(x),
-                       reverse=True)
-        replacements = [parameter_mappings[name] if name in parameter_mappings else species_mappings[name]
-                        for name in names]
+        names = sorted(
+            list(species_mappings.keys()) + list(parameter_mappings.keys()), key=lambda x: len(x), reverse=True
+        )
+        replacements = [
+            parameter_mappings[name] if name in parameter_mappings else species_mappings[name] for name in names
+        ]
         sanitized_function = self.function_string
-        for id, name in enumerate(names):
-            sanitized_function = sanitized_function.replace(name, "{" + str(id) + "}")
+        for _id, name in enumerate(names):
+            sanitized_function = sanitized_function.replace(name, "{" + str(_id) + "}")
         return sanitized_function.format(*replacements)

@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import sys
+
 if sys.version_info < (3, 0):
     raise Exception("GillesPy2 only works in Python 3.0 and higher")
 from .__version__ import __version__, __title__, __description__, __url__

@@ -18,8 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import uuid
 
-from gillespy2.core.sortableobject import SortableObject
 from gillespy2.core.jsonify import Jsonify
+from gillespy2.core.sortableobject import SortableObject
 
 
 class AssignmentRule(SortableObject, Jsonify):
@@ -39,21 +39,23 @@ class AssignmentRule(SortableObject, Jsonify):
 
     def __init__(self, variable=None, formula=None, name=None):
         if name in (None, ""):
-            self.name = f'ar{uuid.uuid4()}'.replace('-', '_')
+            self.name = f"ar{uuid.uuid4()}".replace("-", "_")
         else:
             self.name = name
         self.variable = variable
         self.formula = formula
 
     def __str__(self):
-        return self.variable + ': ' + self.formula
+        return self.variable + ": " + self.formula
 
     def sanitized_formula(self, species_mappings, parameter_mappings):
-        names = sorted(list(species_mappings.keys()) + list(parameter_mappings.keys()), key=lambda x: len(x),
-                       reverse=True)
-        replacements = [parameter_mappings[name] if name in parameter_mappings else species_mappings[name]
-                        for name in names]
+        names = sorted(
+            list(species_mappings.keys()) + list(parameter_mappings.keys()), key=lambda x: len(x), reverse=True
+        )
+        replacements = [
+            parameter_mappings[name] if name in parameter_mappings else species_mappings[name] for name in names
+        ]
         sanitized_formula = self.formula
-        for id, name in enumerate(names):
-            sanitized_formula = sanitized_formula.replace(name, "{" + str(id) + "}")
+        for _id, name in enumerate(names):
+            sanitized_formula = sanitized_formula.replace(name, "{" + str(_id) + "}")
         return sanitized_formula.format(*replacements)

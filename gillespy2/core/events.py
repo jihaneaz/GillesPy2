@@ -17,12 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import uuid
+from abc import ABCMeta
 
 from gillespy2.core.gillespyError import *
 from gillespy2.core.jsonify import Jsonify
 
 
-class EventAssignment(Jsonify):
+class EventAssignment(Jsonify, metaclass=ABCMeta):
     """
     An EventAssignment describes a change to be performed to the current model
     simulation.  This is assignment can either be fired at the time its
@@ -35,7 +36,7 @@ class EventAssignment(Jsonify):
     :type variable: gillespy2.Species, gillespy2.Parameter
 
     :param expression: String to be evaluated when the event is fired.  This expression must
-        be evaluable within the model namespace, and the results of it's
+        be evaluable within the model namespace, and the results of its
         evaluation will be assigned to the EventAssignment variable.
     :type expression: str
 
@@ -44,7 +45,7 @@ class EventAssignment(Jsonify):
     def __init__(self, name=None, variable=None, expression=None):
 
         if name in (None, ""):
-            self.name = f'evn{uuid.uuid4()}'.replace('-', '_')
+            self.name = f"evn{uuid.uuid4()}".replace("-", "_")
         else:
             self.name = name
 
@@ -56,23 +57,22 @@ class EventAssignment(Jsonify):
 
         from gillespy2.core.parameter import Parameter
         from gillespy2.core.species import Species
-        #TODO: ADD Compartment to valid variable types once implemented
+
+        # TODO: ADD Compartment to valid variable types once implemented
         valid_variable_types = [Species, Parameter, str]
 
         if not type(variable) in valid_variable_types:
             print(variable)
             print(type(variable))
-            raise EventError(
-                'GillesPy2 Event Assignment variable must be a valid gillespy2 species')
+            raise EventError("GillesPy2 Event Assignment variable must be a valid gillespy2 species")
         if not isinstance(self.expression, str):
-            raise EventError(
-                             'GillesPy2 Event Assignment expression requires a '
-                             'valid string expression')
+            raise EventError("GillesPy2 Event Assignment expression requires a " "valid string expression")
 
     def __str__(self):
         return f"{self.variable}: {self.expression}"
 
-class EventTrigger(Jsonify):
+
+class EventTrigger(Jsonify, metaclass=ABCMeta):
     """
     Trigger detects changes in model/environment conditions in order to fire an
     event.  A Trigger contains an expression, a mathematical function which can
@@ -85,43 +85,47 @@ class EventTrigger(Jsonify):
         in namespace of Model.
     :type expression: str
 
-    :param value: Value of EventTrigger at simulation start, with time t=0
-    :type value: bool
+    :param initial_value: Value of EventTrigger at simulation start, with time t=0
+    :type initial_value: bool
 
     :param persistent: Determines if trigger condition is persistent or not
     :type persistent: bool
     """
-    def __init__(self, expression=None, initial_value = False, persistent = False):
+
+    def __init__(self, expression=None, initial_value=False, persistent=False):
 
         if isinstance(expression, str):
             self.expression = expression
         else:
-            raise EventError('EventTrigger expression must be a string')
+            raise EventError("EventTrigger expression must be a string")
 
         if isinstance(initial_value, bool):
             self.value = initial_value
         else:
-            raise EventError('EventTrigger initial_value must be bool')
+            raise EventError("EventTrigger initial_value must be bool")
 
         if isinstance(persistent, bool):
             self.persistent = persistent
         else:
-            raise EventError('EventTrigger.persistent must be bool')
+            raise EventError("EventTrigger.persistent must be bool")
+
     def __str__(self):
         return self.expression
 
     def sanitized_expression(self, species_mappings, parameter_mappings):
-        names = sorted(list(species_mappings.keys()) + list(parameter_mappings.keys()), key=lambda x: len(x),
-                       reverse=True)
-        replacements = [parameter_mappings[name] if name in parameter_mappings else species_mappings[name]
-                        for name in names]
+        names = sorted(
+            list(species_mappings.keys()) + list(parameter_mappings.keys()), key=lambda x: len(x), reverse=True
+        )
+        replacements = [
+            parameter_mappings[name] if name in parameter_mappings else species_mappings[name] for name in names
+        ]
         sanitized_expression = self.expression
-        for id, name in enumerate(names):
-            sanitized_expression = sanitized_expression.replace(name, "{"+str(id)+"}")
+        for _id, name in enumerate(names):
+            sanitized_expression = sanitized_expression.replace(name, "{" + str(_id) + "}")
         return sanitized_expression.format(*replacements)
 
 
-class Event(Jsonify):
+class Event(Jsonify, metaclass=ABCMeta):
     """
     An Event can be given as an assignment_expression (function) or directly
     as a value (scalar). If given an assignment_expression, it should be
@@ -131,7 +135,7 @@ class Event(Jsonify):
     :type name: str
 
     :param assignments: List of EventAssignments to be executed at trigger or delay
-    :type assignments: str
+    :type assignments: list
 
     :param trigger: contains math expression which can be evaluated to
         a boolean result.  Upon the transition from 'False' to 'True',
@@ -169,18 +173,19 @@ class Event(Jsonify):
         return str(self) <= str(other)
 
     def __hash__(self):
-        if hasattr(self, '_hash'):
+        if hasattr(self, "_hash"):
             return self._hash
-        if hasattr(self, 'id'):
+        if hasattr(self, "id"):
             self._hash = hash(self.id)
-        elif hasattr(self, 'name'):
+        elif hasattr(self, "name"):
             self._hash = hash(self.name)
         else:
             self._hash = hash(self)
         return self._hash
 
-    def __init__(self, name="", delay=None, assignments=[], priority="0", trigger=None,
-                 use_values_from_trigger_time=False):
+    def __init__(
+        self, name="", delay=None, assignments=None, priority="0", trigger=None, use_values_from_trigger_time=False
+    ):
 
         # Events can contain any number of assignments
         self.assignments = []
@@ -189,22 +194,19 @@ class Event(Jsonify):
         if isinstance(name, str):
             self.name = name
         else:
-            raise EventError(
-             'name must be a valid string')
-        
+            raise EventError("name must be a valid string")
+
         # Trigger
-        if hasattr(trigger, 'expression'):
+        if hasattr(trigger, "expression"):
             self.trigger = trigger
         else:
-            raise EventError(
-             'trigger must be set to a valid EventTrigger')
-        
+            raise EventError("trigger must be set to a valid EventTrigger")
+
         # Delay
         if delay is None or isinstance(delay, str):
             self.delay = delay
         else:
-            raise EventError(
-             'delay must be a valid string or None')
+            raise EventError("delay must be a valid string or None")
 
         # Priority
         self.priority = priority
@@ -212,33 +214,30 @@ class Event(Jsonify):
         # Assignments
         if isinstance(assignments, list):
             for assign in assignments:
-                if hasattr(assign, 'variable'):
+                if hasattr(assign, "variable"):
                     self.assignments.append(assign)
                 else:
-                    raise EventError('assignment list contains an item is not an EventAssignment.')
-        elif hasattr(assignments, 'variable'):
+                    raise EventError("assignment list contains an item is not an EventAssignment.")
+        elif hasattr(assignments, "variable"):
             self.assignments.append(assignments)
         else:
-            raise EventError(
-                'assignments must contain only EventAssignments '
-                'or a list of EventAssignments')
+            raise EventError("assignments must contain only EventAssignments " "or a list of EventAssignments")
         # Use Values from Trigger Time
         if isinstance(use_values_from_trigger_time, bool):
             self.use_values_from_trigger_time = use_values_from_trigger_time
         else:
-            raise EventError(
-                'use_values_from_trigger_time requires bool')
+            raise EventError("use_values_from_trigger_time requires bool")
 
     def __str__(self):
         print_string = self.name
-        print_string += '\n\tTrigger: ' + str(self.trigger)
+        print_string += "\n\tTrigger: " + str(self.trigger)
         if len(self.assignments):
-            print_string += '\n\tAssignments:'
+            print_string += "\n\tAssignments:"
             for a in self.assignments:
                 if isinstance(a.variable, str):
-                    print_string += '\n\t\t' + a.variable + ': ' + a.expression
+                    print_string += "\n\t\t" + a.variable + ": " + a.expression
                 else:
-                    print_string += '\n\t\t' + a.variable.name + ': ' + a.expression
+                    print_string += "\n\t\t" + a.variable.name + ": " + a.expression
         return print_string
 
     def add_assignment(self, assignment):
@@ -249,16 +248,20 @@ class Event(Jsonify):
         :type assignment: EventAssignment or list[EventAssignment]
         """
 
-        if hasattr(assignment, 'variable'):
+        if hasattr(assignment, "variable"):
             self.assignments.append(assignment)
         elif isinstance(assignment, list):
             for assign in assignment:
-                if hasattr(assign, 'variable'):
+                if hasattr(assign, "variable"):
                     self.assignments.append(assign)
                 else:
-                    raise EventError('add_assignment failed to add EventAssignment. Assignment to be added must be of '
-                                     'type EventAssignment or list of EventAssignment objects.')
+                    raise EventError(
+                        "add_assignment failed to add EventAssignment. Assignment to be added must be of "
+                        "type EventAssignment or list of EventAssignment objects."
+                    )
         else:
-            raise ModelError("Unexpected parameter for add_assignment. Parameter must be EventAssignment or list of "
-                             "EventAssignments")
+            raise ModelError(
+                "Unexpected parameter for add_assignment. Parameter must be EventAssignment or list of "
+                "EventAssignments"
+            )
         return assignment

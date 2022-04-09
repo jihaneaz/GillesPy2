@@ -39,49 +39,52 @@ class TestPauseResume(unittest.TestCase):
 
     model = MichaelisMenten()
     for sp in model.listOfSpecies.values():
-        sp.mode = 'discrete'
+        sp.mode = "discrete"
     labeled_results = {}
     labeled_results_more_trajectories = {}
 
-
     for solver in solvers:
         labeled_results[solver] = model.run(solver=solver, show_labels=True)
+
     def test_altered_model_failure(self):
         model = MichaelisMenten()
         for solver in self.solvers:
             tmpResults = model.run(solver=solver)
             with self.assertRaises(gillespyError.SimulationError):
-                sp1 = Species('sp2',initial_value=5)
+                sp1 = Species("sp2", initial_value=5)
                 model.add_species(sp1)
-                tmpResults = model.run(solver=solver,resume=tmpResults,t=150)
-            model.delete_species('sp2')
-
+                tmpResults = model.run(solver=solver, resume=tmpResults, t=150)
+            model.delete_species("sp2")
 
     def test_resume(self):
         model = self.model
         for solver in self.solvers:
-            self.labeled_results[solver] = model.run(solver=solver, show_labels=True,
-                                                     resume=self.labeled_results[solver], t=150)
+            self.labeled_results[solver] = model.run(
+                solver=solver, show_labels=True, resume=self.labeled_results[solver], t=150
+            )
         for solver in self.solvers:
-            self.assertEqual(int(self.labeled_results[solver][0]['time'][-1]),150)
+            self.assertEqual(int(self.labeled_results[solver][0]["time"][-1]), 150)
 
     def test_time_fail(self):
         model = self.model
         for solver in self.solvers:
             with self.assertRaises((gillespyError.ExecutionError, gillespyError.SimulationError)):
-                self.labeled_results = model.run(solver=solver, show_labels=True, resume=self.labeled_results[solver],
-                                                 t=1)
+                self.labeled_results = model.run(
+                    solver=solver, show_labels=True, resume=self.labeled_results[solver], t=1
+                )
 
     def test_pause(self):
-        py_path = which('python3')
+        py_path = which("python3")
         if py_path is None:
-            py_path = which('python')
-        model_path = os.path.join(os.path.dirname(__file__), 'pause_model.py')
-        args = [[py_path, model_path, 'NumPySSASolver'],
-                [py_path, model_path, 'TauLeapingSolver'],
-                [py_path, model_path, 'ODESolver']]
+            py_path = which("python")
+        model_path = os.path.join(os.path.dirname(__file__), "pause_model.py")
+        args = [
+            [py_path, model_path, "NumPySSASolver"],
+            [py_path, model_path, "TauLeapingSolver"],
+            [py_path, model_path, "ODESolver"],
+        ]
         for arg in args:
-            if os.name == 'nt':
+            if os.name == "nt":
                 p = subprocess.Popen(arg, stdout=subprocess.PIPE, creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
                 time.sleep(2)
                 p.send_signal(signal.CTRL_BREAK_EVENT)
@@ -93,7 +96,7 @@ class TestPauseResume(unittest.TestCase):
             # End time for Oregonator is 5. If indexing into a numpy array using the form:
             # results[0][-1][0] (where .run(show_labels=False), this index being the last time in the index
             # One would get an output of "5.0" before converting it to an int. Hence, assert time != 5.0 rather than 5.
-            self.assertFalse(out.decode('utf-8').rstrip() == '5.0')
+            self.assertFalse(out.decode("utf-8").rstrip() == "5.0")
 
         solvers = [SSACSolver]
         # For the C solvers, timeouts behave identical to a keyboard interrupt, and would return the same data, if
@@ -102,8 +105,5 @@ class TestPauseResume(unittest.TestCase):
         # manual, whereas timeout is a set variable
         for solver in solvers:
             model = Oregonator()
-            results = model.run(solver=solver,timeout=1)
-            self.assertFalse(results.to_array()[0][-1][0] == '5.0')
-
-
-
+            results = model.run(solver=solver, timeout=1)
+            self.assertFalse(results.to_array()[0][-1][0] == "5.0")

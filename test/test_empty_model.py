@@ -34,5 +34,5 @@ class TestEmptyModel(unittest.TestCase):
         self.assertEqual(name, "", msg="Unexpected value: {}".format(name))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

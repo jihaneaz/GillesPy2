@@ -16,15 +16,17 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import numpy as np
-import random
-import tempfile
 import os
-import uuid
-import subprocess
+import random
 import shutil
+import subprocess
+import tempfile
+import uuid
+
+import numpy as np
+
 from gillespy2.core import GillesPySolver, Model, log
-from gillespy2.core.gillespyError import SimulationError, InvalidModelError
+from gillespy2.core.gillespyError import InvalidModelError, SimulationError
 
 
 class StochKitBaseSolver(GillesPySolver):
@@ -74,23 +76,37 @@ class StochKitBaseSolver(GillesPySolver):
     :param show_labels: Use names of species as index of result object rather than position numbers.
     :type show_labels: str
     """
+
     @classmethod
-    def run(cls, model, t=20, number_of_trajectories=1, increment=0.05, seed=None,
-            stochkit_home=None, algorithm=None, job_id=None, extra_args='',
-            debug=False, profile=False, show_labels=False, **kwargs):
+    def run(
+        cls,
+        model,
+        t=20,
+        number_of_trajectories=1,
+        increment=0.05,
+        seed=None,
+        stochkit_home=None,
+        algorithm=None,
+        job_id=None,
+        extra_args="",
+        debug=False,
+        profile=False,
+        show_labels=False,
+        **kwargs
+    ):
         """
         Call out and run the solver. Collect the results.
         """
         if len(kwargs) > 0:
             for key in kwargs:
-                log.warning('Unsupported keyword argument to solver: {0}'.format(key))
+                log.warning("Unsupported keyword argument to solver: {0}".format(key))
 
         if algorithm is None:
             raise SimulationError("No algorithm selected")
 
         # We write all StochKit input and output files to a temporary folder
         prefix_base_dir = tempfile.mkdtemp()
-        prefix_out_dir = os.path.join(prefix_base_dir, 'output')
+        prefix_out_dir = os.path.join(prefix_base_dir, "output")
         os.mkdir(prefix_out_dir)
 
         if job_id is None:
@@ -99,19 +115,23 @@ class StochKitBaseSolver(GillesPySolver):
         if isinstance(model, Model):
             # Write a temporary StochKit2 input file.
             outfile = os.path.join(prefix_base_dir, "temp_input_{0}.xml".format(job_id))
-            with open(outfile, 'w') as model_file_handle:
+            with open(outfile, "w") as model_file_handle:
                 model_file_handle.write(model.serialize())
         elif isinstance(model, str):
             outfile = model
         else:
-            raise InvalidModelError('Model must be either a GillesPy Model instance or an xml file name.')
+            raise InvalidModelError("Model must be either a GillesPy Model instance or an xml file name.")
 
         executable = cls.locate_executable(stochkit_home=stochkit_home, algorithm=algorithm)
 
         if executable is None:
-            raise SimulationError("stochkit executable '{0}' not found. \
+            raise SimulationError(
+                "stochkit executable '{0}' not found. \
                 Make sure it is your path, or set STOCHKIT_HOME environment \
-                variable'".format(algorithm))
+                variable'".format(
+                    algorithm
+                )
+            )
 
         # Assemble argument list for StochKit
         out_dir = os.path.join(prefix_out_dir, job_id)
@@ -121,17 +141,17 @@ class StochKitBaseSolver(GillesPySolver):
         num_output_points = round(t / increment)
 
         # Assemble the argument list
-        args = '--model {0} --out-dir {1} -t {2} -i {3}'.format(outfile, out_dir, t, int(num_output_points))
+        args = "--model {0} --out-dir {1} -t {2} -i {3}".format(outfile, out_dir, t, int(num_output_points))
 
-        directories = os.listdir(prefix_out_dir)
+        # directories = os.listdir(prefix_out_dir)
         if os.path.isdir(out_dir):
             if debug:
-                print('Ensemble {0} already existed, using --force.'.format(job_id))
-            args += ' --force'
+                print("Ensemble {0} already existed, using --force.".format(job_id))
+            args += " --force"
 
         # If we are using local mode, shell out and run StochKit
         # (SSA or Tau-leaping or ODE)
-        cmd = ' '.join([executable, args, extra_args])
+        cmd = " ".join([executable, args, extra_args])
         if debug:
             print("cmd: {0}".format(cmd))
 
@@ -145,11 +165,11 @@ class StochKitBaseSolver(GillesPySolver):
         try:
             stderr = handle.stderr.read()
         except Exception as e:
-            stderr = 'Error reading stderr: {0}'.format(e)
+            stderr = "Error reading stderr: {0}".format(e)
         try:
             stdout = handle.stdout.read()
         except Exception as e:
-            stdout = 'Error reading stdout: {0}'.format(e)
+            stdout = "Error reading stdout: {0}".format(e)
 
         if return_code != 0:
             raise SimulationError("Solver execution failed: '{0}' output: {1}{2}".format(cmd, stdout, stderr))
@@ -164,9 +184,10 @@ class StochKitBaseSolver(GillesPySolver):
                 trajectories = cls.label_trajectories(trajectories, labels)
             return trajectories, cls.rc
         except Exception as e:
-            compile_log_file = os.path.join(prefix_base_dir, 'temp_input_{0}_generated_code'.format(job_id),
-                                            'compile-log.txt')
-            log_file = os.path.join(prefix_out_dir, job_id, 'log.txt')
+            compile_log_file = os.path.join(
+                prefix_base_dir, "temp_input_{0}_generated_code".format(job_id), "compile-log.txt"
+            )
+            log_file = os.path.join(prefix_out_dir, job_id, "log.txt")
             for file_name in [compile_log_file, log_file]:
                 if os.path.isfile(file_name):
                     with open(file_name) as f:
@@ -191,17 +212,19 @@ class StochKitBaseSolver(GillesPySolver):
             if os.path.isfile(os.path.join(stochkit_home, algorithm)):
                 executable = os.path.join(stochkit_home, algorithm)
             else:
-                raise SimulationError("stochkit executable '{0}' not found \
-                stochkit_home={1}".format(algorithm, stochkit_home))
-        elif os.environ.get('STOCHKIT_HOME') is not None:
-            if os.path.isfile(os.path.join(os.environ.get('STOCHKIT_HOME'),
-                                           algorithm)):
-                executable = os.path.join(os.environ.get('STOCHKIT_HOME'),
-                                          algorithm)
+                raise SimulationError(
+                    "stochkit executable '{0}' not found \
+                stochkit_home={1}".format(
+                        algorithm, stochkit_home
+                    )
+                )
+        elif os.environ.get("STOCHKIT_HOME") is not None:
+            if os.path.isfile(os.path.join(os.environ.get("STOCHKIT_HOME"), algorithm)):
+                executable = os.path.join(os.environ.get("STOCHKIT_HOME"), algorithm)
         if executable is None:
             # try to find the executable in the path
-            if os.environ.get('PATH') is not None:
-                for directory in os.environ.get('PATH').split(os.pathsep):
+            if os.environ.get("PATH") is not None:
+                for directory in os.environ.get("PATH").split(os.pathsep):
                     if os.path.isfile(os.path.join(directory, algorithm)):
                         executable = os.path.join(directory, algorithm)
                         break
@@ -230,7 +253,7 @@ class StochKitBaseSolver(GillesPySolver):
 
 
 class StochKitSolver(StochKitBaseSolver):
-    name = 'StochKitSolver'
+    name = "StochKitSolver"
     """
     Abstract class for StochKit solver derived from the GillesPySolver class.
     This is generally used to set up the solver.
@@ -274,28 +297,58 @@ class StochKitSolver(StochKitBaseSolver):
     :param show_labels: Use names of species as index of result object rather than position numbers.
     :type show_labels: str
     """
+
     @classmethod
-    def run(cls, model, t=20, number_of_trajectories=1, increment=0.05, seed=None,
-            stochkit_home=None, algorithm='ssa', job_id=None, method=None,
-            debug=False, show_labels=False, profile=False, processes=1, **kwargs):
+    def run(
+        cls,
+        model,
+        t=20,
+        number_of_trajectories=1,
+        increment=0.05,
+        seed=None,
+        stochkit_home=None,
+        algorithm="ssa",
+        job_id=None,
+        method=None,
+        debug=False,
+        show_labels=False,
+        profile=False,
+        processes=1,
+        **kwargs
+    ):
 
         # all this is specific to StochKit
         if model.units == "concentration":
-            raise SimulationError("StochKit can only simulate population \
+            raise SimulationError(
+                "StochKit can only simulate population \
                                   models, please convert to population-based model for \
                                   stochastic simulation. Use solver = StochKitODESolver \
-                                  instead to simulate a concentration model deterministically.")
+                                  instead to simulate a concentration model deterministically."
+            )
 
         seed = super().process_seed(seed)
 
         # We keep all the trajectories by default.
-        args = ' -p {0} --keep-trajectories --label --seed {1} --realizations {2}'.format(processes, seed, number_of_trajectories)
+        args = " -p {0} --keep-trajectories --label --seed {1} --realizations {2}".format(
+            processes, seed, number_of_trajectories
+        )
 
         if method is not None:  # This only works for StochKit 2.1
-            args += ' --method ' + str(method)
+            args += " --method " + str(method)
 
-        return super().run(model=model, t=t, number_of_trajectories=number_of_trajectories, increment=increment, seed=seed, stochkit_home=stochkit_home,
-                           algorithm=algorithm, job_id=job_id, debug=debug, show_labels=show_labels, extra_args=args)
+        return super().run(
+            model=model,
+            t=t,
+            number_of_trajectories=number_of_trajectories,
+            increment=increment,
+            seed=seed,
+            stochkit_home=stochkit_home,
+            algorithm=algorithm,
+            job_id=job_id,
+            debug=debug,
+            show_labels=show_labels,
+            extra_args=args,
+        )
 
     @classmethod
     def get_trajectories(cls, out_dir, debug=False, show_labels=False):
@@ -303,16 +356,20 @@ class StochKitSolver(StochKitBaseSolver):
             print("StochKitSolver.get_trajectories(out_dir={0}".format(out_dir))
         # Collect all the output data
         trajectories = []
-        trajectory_directory = os.path.join(out_dir, 'trajectories')
+        trajectory_directory = os.path.join(out_dir, "trajectories")
         for filename in os.listdir(trajectory_directory):
-            if 'trajectory' in filename:
+            if "trajectory" in filename:
                 filename = os.path.join(trajectory_directory, filename)
                 trajectories.append(np.loadtxt(filename, skiprows=1))
             else:
-                raise SimulationError("Couldn't identify file '{0}' found in \
-                                        output folder".format(filename))
+                raise SimulationError(
+                    "Couldn't identify file '{0}' found in \
+                                        output folder".format(
+                        filename
+                    )
+                )
         if show_labels:
-            with open(os.path.join(trajectory_directory, 'trajectory0.txt'), 'r') as fd:
+            with open(os.path.join(trajectory_directory, "trajectory0.txt"), "r") as fd:
                 headers = fd.readline()
             return headers.split(), trajectories
         return trajectories
@@ -365,12 +422,33 @@ class StochKitODESolver(StochKitBaseSolver):
     """
 
     @classmethod
-    def run(cls, model, t=20, number_of_trajectories=1,
-            increment=0.05, seed=None, stochkit_home=None,
-            algorithm='stochkit_ode.py',
-            job_id=None, debug=False, profile=False, show_labels=False, **kwargs):
-        return super().run(model, t, number_of_trajectories, increment, seed, stochkit_home,
-                           algorithm, job_id, debug=debug, show_labels=show_labels)
+    def run(
+        cls,
+        model,
+        t=20,
+        number_of_trajectories=1,
+        increment=0.05,
+        seed=None,
+        stochkit_home=None,
+        algorithm="stochkit_ode.py",
+        job_id=None,
+        debug=False,
+        profile=False,
+        show_labels=False,
+        **kwargs
+    ):
+        return super().run(
+            model,
+            t,
+            number_of_trajectories,
+            increment,
+            seed,
+            stochkit_home,
+            algorithm,
+            job_id,
+            debug=debug,
+            show_labels=show_labels,
+        )
 
     @classmethod
     def get_trajectories(cls, out_dir, debug=False, show_labels=False):
@@ -378,7 +456,7 @@ class StochKitODESolver(StochKitBaseSolver):
             print("StochKitODESolver.get_trajectories(out_dir={0}".format(out_dir))
         # Collect all the output data
         trajectories = []
-        with open(os.path.join(out_dir, 'output.txt'), 'r') as fd:
+        with open(os.path.join(out_dir, "output.txt"), "r") as fd:
             fd.readline()
             headers = fd.readline()
             fd.readline()

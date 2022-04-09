@@ -24,7 +24,7 @@ from gillespy2 import TauLeapingSolver
 
 class TestBasicTauLeapingSolver(unittest.TestCase):
     model = Example()
-    
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

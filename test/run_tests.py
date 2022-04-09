@@ -16,24 +16,28 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import unittest, sys, os
 import argparse
+import os
+import sys
+import unittest
 
 try:
     import pyximport
+
     pyximport.install()
 except Exception:
     pass
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-m', '--mode', default='develop', choices=['develop', 'release'],
-                    help='Run tests in develop mode or release mode.')
+parser.add_argument(
+    "-m", "--mode", default="develop", choices=["develop", "release"], help="Run tests in develop mode or release mode."
+)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     args = parser.parse_args()
-    if args.mode == 'develop':
-        print('Running tests in develop mode. Appending repository directory to system path.')
-        sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+    if args.mode == "develop":
+        print("Running tests in develop mode. Appending repository directory to system path.")
+        sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
     import test_empty_model
     import test_build_engine
@@ -80,15 +84,15 @@ if __name__ == '__main__':
         test_propensity_parser,
         test_check_cpp_support,
         test_jsonify,
-        test_notebooks
+        test_notebooks,
     ]
 
     for module in modules:
         suite = unittest.TestLoader().loadTestsFromModule(module)
-        runner = unittest.TextTestRunner(failfast=args.mode == 'develop')
+        runner = unittest.TextTestRunner(failfast=args.mode == "develop")
 
         print("Executing: {}".format(module))
         result = runner.run(suite)
-        print('=' * 70)
+        print("=" * 70)
         if not result.wasSuccessful():
             sys.exit(not result.wasSuccessful())

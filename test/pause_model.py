@@ -17,17 +17,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import sys
-sys.path.append('..')
-from gillespy2.core import Model, Species, Reaction, Parameter
+
 import numpy as np
-from gillespy2 import NumPySSASolver
-from gillespy2 import TauLeapingSolver
-from gillespy2 import ODESolver
-import sys
+
+sys.path.append("..")
+
+from gillespy2.core import Model, Parameter, Reaction, Species
+from gillespy2 import NumPySSASolver, ODESolver, TauLeapingSolver
+
 np.set_printoptions(suppress=True)
 
-class Oregonator(Model):
 
+class Oregonator(Model):
     def __init__(self, parameter_values=None):
         # Superclass initialization
         Model.__init__(self, name="Oregonator")
@@ -49,40 +50,24 @@ class Oregonator(Model):
         self.add_parameter([k1, k2, k3, k4, k5])
 
         # Reactions
-        reaction1 = Reaction(name="reaction1",
-                             reactants={B: 1, F: 1},
-                             products={A: 1, F: 1},
-                             rate=k1)
-        reaction2 = Reaction(name="reaction2",
-                             reactants={A: 1, B: 1},
-                             products={P: 1},
-                             rate=k2)
-        reaction3 = Reaction(name="reaction3",
-                             reactants={A: 1, F: 1},
-                             products={A: 2, C: 1, F: 1},
-                             rate=k3)
-        reaction4 = Reaction(name="reaction4",
-                             reactants={A: 2},
-                             products={P: 1},
-                             rate=k4)
-        reaction5 = Reaction(name="reaction5",
-                             reactants={C: 1, F: 1},
-                             products={B: 1, F: 1},
-                             rate=k5)
+        reaction1 = Reaction(name="reaction1", reactants={B: 1, F: 1}, products={A: 1, F: 1}, rate=k1)
+        reaction2 = Reaction(name="reaction2", reactants={A: 1, B: 1}, products={P: 1}, rate=k2)
+        reaction3 = Reaction(name="reaction3", reactants={A: 1, F: 1}, products={A: 2, C: 1, F: 1}, rate=k3)
+        reaction4 = Reaction(name="reaction4", reactants={A: 2}, products={P: 1}, rate=k4)
+        reaction5 = Reaction(name="reaction5", reactants={C: 1, F: 1}, products={B: 1, F: 1}, rate=k5)
         self.add_reaction([reaction1, reaction2, reaction3, reaction4, reaction5])
-        if sys.argv[1] != 'ODESolver':
+        if sys.argv[1] != "ODESolver":
             self.timespan(np.linspace(0, 5, 501))
         else:
             self.timespan(np.linspace(0, 5, 500001))
 
+
 model = Oregonator()
-if sys.argv[1] == 'NumPySSASolver':
+if sys.argv[1] == "NumPySSASolver":
     results = model.run(solver=NumPySSASolver)
-elif sys.argv[1] == 'TauLeapingSolver':
+elif sys.argv[1] == "TauLeapingSolver":
     results = model.run(solver=TauLeapingSolver)
 else:
     results = model.run(solver=ODESolver)
 
 print(results.to_array()[0][-1][0])
-
-

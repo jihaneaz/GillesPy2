@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import sys
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 import unittest
 from unittest import TestCase
@@ -38,15 +38,9 @@ from gillespy2.solvers.numpy.tau_leaping_solver import TauLeapingSolver
 class TestPythonSolverPerf(TestCase):
     def setUp(self) -> None:
         self.solvers = {
-            NumPySSASolver: [
-                Tyson2StateOscillator()
-            ],
-            ODESolver: [
-                Oregonator()
-            ],
-            TauLeapingSolver: [
-                VilarOscillator()
-            ],
+            NumPySSASolver: [Tyson2StateOscillator()],
+            ODESolver: [Oregonator()],
+            TauLeapingSolver: [VilarOscillator()],
         }
 
     def test_python_solver_perf(self):
@@ -62,6 +56,7 @@ class TestPythonSolverPerf(TestCase):
             print()
 
         print()
+
 
 if __name__ == "__main__":
     unittest.main()

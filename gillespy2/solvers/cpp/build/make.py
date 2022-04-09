@@ -18,11 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 import subprocess
-
 from pathlib import Path
 
-from gillespy2.core import log
-from gillespy2.core import gillespyError
+from gillespy2.core import gillespyError, log
+
 
 class Make():
     def __init__(self, makefile: str, output_dir: str, obj_dir: str = None):

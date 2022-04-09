@@ -18,8 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import uuid
 
-from gillespy2.core.sortableobject import SortableObject
 from gillespy2.core.jsonify import Jsonify
+from gillespy2.core.sortableobject import SortableObject
 
 
 class RateRule(SortableObject, Jsonify):
@@ -35,9 +35,9 @@ class RateRule(SortableObject, Jsonify):
     :type formula: str
     """
 
-    def __init__(self, variable=None, formula='', name=None):
+    def __init__(self, variable=None, formula="", name=None):
         if name in (None, ""):
-            self.name = f'rr{uuid.uuid4()}'.replace('-', '_')
+            self.name = f"rr{uuid.uuid4()}".replace("-", "_")
         else:
             self.name = name
         self.formula = formula
@@ -45,16 +45,18 @@ class RateRule(SortableObject, Jsonify):
 
     def __str__(self):
         try:
-            return self.name + ': Var: ' + self.variable + ': ' + self.formula
-        except:
-            return 'Rate Rule: {} contains an invalid variable or formula'.format(self.name)
+            return self.name + ": Var: " + self.variable + ": " + self.formula
+        except Exception as e:
+            return f"Rate Rule: {self.name} contains an invalid variable or formula: {e}"
 
     def sanitized_formula(self, species_mappings, parameter_mappings):
-        names = sorted(list(species_mappings.keys()) + list(parameter_mappings.keys()), key=lambda x: len(x),
-                       reverse=True)
-        replacements = [parameter_mappings[name] if name in parameter_mappings else species_mappings[name]
-                        for name in names]
+        names = sorted(
+            list(species_mappings.keys()) + list(parameter_mappings.keys()), key=lambda x: len(x), reverse=True
+        )
+        replacements = [
+            parameter_mappings[name] if name in parameter_mappings else species_mappings[name] for name in names
+        ]
         sanitized_formula = self.formula
-        for id, name in enumerate(names):
-            sanitized_formula = sanitized_formula.replace(name, "{" + str(id) + "}")
+        for _id, name in enumerate(names):
+            sanitized_formula = sanitized_formula.replace(name, "{" + str(_id) + "}")
         return sanitized_formula.format(*replacements)

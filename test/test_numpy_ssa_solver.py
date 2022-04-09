@@ -37,7 +37,7 @@ class TestNumPySSASolver(unittest.TestCase):
         with self.assertRaises(SimulationError):
             model = Example()
             results = NumPySSASolver.run(model=model, increment=0.2)
-    
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

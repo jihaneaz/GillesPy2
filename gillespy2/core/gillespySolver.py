@@ -16,41 +16,55 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from .gillespyError import SimulationError, ModelError
 from typing import Set, Type
+
+from .gillespyError import ModelError, SimulationError
 
 
 class GillesPySolver:
-    """ 
+    """
     Abstract class for a solver.
     """
 
     name = "GillesPySolver"
 
-    def run(self, model, t=20, number_of_trajectories=1, increment=0.05, seed=None,
-            debug=False, profile=False, show_labels=None, **kwargs):
-        """ 
+    def __init__(self, model):
+        self.model = model
+
+    def run(
+        self,
+        model,
+        t=20,
+        number_of_trajectories=1,
+        increment=0.05,
+        seed=None,
+        debug=False,
+        profile=False,
+        show_labels=None,
+        **kwargs,
+    ):
+        """
         Call out and run the solver. Collect the results.
 
         :param model: The model on which the solver will operate.
         :type model: gillespy.Model
-        
+
         :param t: The end time of the solver
         :type t: int
-        
+
         :param number_of_trajectories: The number of times to sample the chemical master equation. Each
             trajectory will be returned at the end of the simulation.
         :type number_of_trajectories: int
 
         :param increment: The time step of the solution
         :type increment: float
-    
-        :param seed: The random seed for the simulation. Defaults to None. 
+
+        :param seed: The random seed for the simulation. Defaults to None.
         :type seed: int
-        
+
         :param debug: Set to True to provide additional debug information about the simulation.
         :type debug: bool
-        
+
         :param show_labels: Use names of species as index of result object rather than position numbers.
         :type show_labels: bool
 
@@ -72,7 +86,7 @@ class GillesPySolver:
         if increment is None:
             return self.model.tspan[-1] - self.model.tspan[-2]
         if self.model.user_set_tspan:
-            raise  SimulationError(
+            raise SimulationError(
                 """
                 Failed while preparing to run the model. Both increment and timespan are set.
 
@@ -91,6 +105,7 @@ class GillesPySolver:
         unsupported_features = model.get_model_features() - cls.get_supported_features()
         if unsupported_features:
             unsupported_features = [feature.__name__ for feature in unsupported_features]
-            raise ModelError(f"Could not run Model, "
-                             f"SBML Features not supported by {cls.name}: " +
-                             ", ".join(unsupported_features))
+            raise ModelError(
+                f"Could not run Model, "
+                f"SBML Features not supported by {cls.name}: " + ", ".join(unsupported_features)
+            )

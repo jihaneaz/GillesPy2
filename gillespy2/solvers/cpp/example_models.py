@@ -16,8 +16,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from gillespy2.core import Model, Species, Reaction, Parameter
 import numpy as np
+
+from gillespy2.core import Model, Parameter, Reaction, Species
 
 
 class Example(Model):
@@ -29,16 +30,24 @@ class Example(Model):
         # Initialize the model.
         Model.__init__(self, name="Example")
         # Species
-        S = Species(name='Sp', initial_value=100)
+        S = Species(name="Sp", initial_value=100)
         self.add_species([S])
         # Parameters
-        k1 = Parameter(name='k1', expression=3.0)
+        k1 = Parameter(name="k1", expression=3.0)
         self.add_parameter([k1])
         # Reactions
-        rxn1 = Reaction(name='S degradation', reactants={S: 1}, products={}, rate=k1)
+        rxn1 = Reaction(name="S degradation", reactants={S: 1}, products={}, rate=k1)
         self.add_reaction([rxn1])
         self.timespan(np.linspace(0, 20, 101))
 
 
-__all__ = ['Trichloroethylene', 'LacOperon', 'Schlogl', 'MichaelisMenten',
-           'ToggleSwitch', 'Example', 'Tyson2StateOscillator', 'Oregonator']
+__all__ = [
+    "Trichloroethylene",
+    "LacOperon",
+    "Schlogl",
+    "MichaelisMenten",
+    "ToggleSwitch",
+    "Example",
+    "Tyson2StateOscillator",
+    "Oregonator",
+]

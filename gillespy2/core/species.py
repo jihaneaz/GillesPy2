@@ -16,10 +16,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from gillespy2.core.sortableobject import SortableObject
+import numpy as np
+
 from gillespy2.core.gillespyError import *
 from gillespy2.core.jsonify import Jsonify
-import numpy as np
+from gillespy2.core.sortableobject import SortableObject
+
 
 class Species(SortableObject, Jsonify):
     """
@@ -58,15 +60,22 @@ class Species(SortableObject, Jsonify):
     :type switch_tol: float
 
     :param switch_min:  ***FOR USE WITH BasicTauHybridSolver ONLY***
-        Minimum population value at which species will be represented as continuous. If a value is given, switch_min will be
-        used instead of switch_tol
+        Minimum population value at which species will be represented as continuous. If a value is given, switch_min
+        will be used instead of switch_tol
     :type switch_min: float
     """
 
-    def __init__(self, name="", initial_value=0, constant=False,
-                 boundary_condition=False, mode=None,
-                 allow_negative_populations=False, switch_min=0,
-                 switch_tol=0.03):
+    def __init__(
+        self,
+        name="",
+        initial_value=0,
+        constant=False,
+        boundary_condition=False,
+        mode=None,
+        allow_negative_populations=False,
+        switch_min=0,
+        switch_tol=0.03,
+    ):
         # A species has a name (string) and an initial value (positive integer)
         self.name = name
         self.constant = constant
@@ -76,33 +85,36 @@ class Species(SortableObject, Jsonify):
         self.switch_min = switch_min
         self.switch_tol = switch_tol
 
-        mode_list = ['continuous', 'dynamic', 'discrete', None]
+        mode_list = ["continuous", "dynamic", "discrete", None]
 
         if self.mode not in mode_list:
-            raise SpeciesError('Species mode must be either \'continuous\', \'dynamic\', \'discrete\', or '
-                               '\'unspecified(default to dynamic for BasicTauHybridSolver)\'.')
-        if mode == 'continuous':
+            raise SpeciesError(
+                "Species mode must be either 'continuous', 'dynamic', 'discrete', or "
+                "'unspecified(default to dynamic for BasicTauHybridSolver)'."
+            )
+        if mode == "continuous":
             self.initial_value = np.float(initial_value)
         else:
             if np.int(initial_value) != initial_value:
                 raise ValueError(
                     "'initial_value' for Species with mode='discrete' must be an integer value. Change to "
-                    "mode='continuous' to use floating point values.")
+                    "mode='continuous' to use floating point values."
+                )
             self.initial_value = np.int(initial_value)
         if not allow_negative_populations:
             if self.initial_value < 0:
-                raise ValueError('A species initial value must be non-negative unless allow_negative_populations=True')
+                raise ValueError("A species initial value must be non-negative unless allow_negative_populations=True")
 
     def __str__(self):
         print_string = self.name
-        print_string += ': ' + str(self.initial_value)
-        '''
+        print_string += ": " + str(self.initial_value)
+        """
         print_string += '\n\tInitial Value: ' + str(self.initial_value)
         print_string += '\n\tConstant: ' + str(self.constant)
         print_string += '\n\tBoundary Condition: ' + str(self.boundary_condition)
         print_string += '\n\tMode: ' + self.mode
         print_string += '\n\tAllow Negative Populations: ' + str(self.allow_negative_populations)
-        '''
+        """
         return print_string
 
     def set_initial_value(self, num):
@@ -112,9 +124,10 @@ class Species(SortableObject, Jsonify):
         :param num: Integer to set initial species population
         :raises SpeciesError: If num is non-negative or a decimal number
         """
-        if isinstance(num, float) and (self.mode != 'dynamic' or self.mode != 'continuous'):
+        if isinstance(num, float) and (self.mode != "dynamic" or self.mode != "continuous"):
             raise SpeciesError("Mode set to discrete, species must be an integer number.")
-        if num < 0 and self.allow_negative_populations == False:
-            raise SpeciesError("Species population must be non-negative, or allow_negative_populations "
-                               "must be set to True")
+        if num < 0 and self.allow_negative_populations is False:
+            raise SpeciesError(
+                "Species population must be non-negative, or allow_negative_populations " "must be set to True"
+            )
         self.initial_value = num

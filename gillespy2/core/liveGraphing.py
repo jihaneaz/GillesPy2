@@ -16,10 +16,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import sys
 import json
-import time
+import sys
 import threading
+
 from gillespy2.core import log
 
 
@@ -32,15 +32,15 @@ class CRepeatTimer(threading.Timer):
     pause = False
 
     def run(self):
-        from IPython.display import clear_output
-        type = str.join('', [*self.args[1]])
+
+        type_ = str.join("", [*self.args[1]])
         while not self.finished.wait(self.interval):
             args = self.args[0].get()
             self.function(*args, **self.kwargs)
-        
+
         if not self.pause:
             args = self.args[0].get()
-            self.kwargs['finished'] = True
+            self.kwargs["finished"] = True
             self.function(*args, **self.kwargs)
 
 
@@ -48,19 +48,19 @@ class RepeatTimer(threading.Timer):
     """
     Threading timer which repeatedly calls the given function instead of simply ending
     """
+
     pause = False
 
     def run(self):
-        from IPython.display import clear_output
-        type = str.join('', [*self.args[3]])
+
+        type = str.join("", [*self.args[3]])
         self.args = self.args[:3]
         while not self.finished.wait(self.interval):
             self.function(*self.args, **self.kwargs)
 
         if not self.pause:
-            self.kwargs['finished'] = True
+            self.kwargs["finished"] = True
             self.function(*self.args, **self.kwargs)
-
 
 
 def display_types():
@@ -68,52 +68,59 @@ def display_types():
 
 
 def valid_graph_params(live_output_options):
-    if live_output_options['type'] not in ['progress', 'graph', 'text']:
+    if live_output_options["type"] not in ["progress", "graph", "text"]:
         from gillespy2.core.gillespyError import SimulationError
-        raise SimulationError("Invalid input to 'live_output', please check spelling and ensure input is"
-                              " lower case.")
-    if 'interval' not in live_output_options:
-        live_output_options['interval'] = 1
-    elif live_output_options['interval'] < 0:
 
-        log.warning("In LiveGraphing live_output_options, got \"interval\" = \"{0}\". setting interval = 1"
-                    .format(live_output_options['interval']))
-        live_output_options['interval'] = 1
+        raise SimulationError(
+            "Invalid input to 'live_output', please check spelling and ensure input is" " lower case."
+        )
+    if "interval" not in live_output_options:
+        live_output_options["interval"] = 1
+    elif live_output_options["interval"] < 0:
 
-    if live_output_options['type'] == "graph" and live_output_options['interval'] < 1:
-        log.warning("In LiveGraphing live_output_options, got \"interval\" = \"{0}\". Consider using an interval >= 1 "
-                    "when displaying graphs".format(live_output_options['interval']))
+        log.warning(
+            'In LiveGraphing live_output_options, got "interval" = "{0}". setting interval = 1'.format(
+                live_output_options["interval"]
+            )
+        )
+        live_output_options["interval"] = 1
 
-    if 'clear_output' not in live_output_options:
+    if live_output_options["type"] == "graph" and live_output_options["interval"] < 1:
+        log.warning(
+            'In LiveGraphing live_output_options, got "interval" = "{0}". Consider using an interval >= 1 '
+            "when displaying graphs".format(live_output_options["interval"])
+        )
 
-        if live_output_options['type'] == "graph" or live_output_options['type'] == "progress":
-            live_output_options['clear_output'] = True
+    if "clear_output" not in live_output_options:
+
+        if live_output_options["type"] == "graph" or live_output_options["type"] == "progress":
+            live_output_options["clear_output"] = True
         else:
-            live_output_options['clear_output'] = False
+            live_output_options["clear_output"] = False
 
-    if 'file_path' not in live_output_options:
-        live_output_options['file_path'] = None
-    elif live_output_options['type'] == "graph" and live_output_options['file_path'] is not None:
-        live_output_options['type'] = "figure"
+    if "file_path" not in live_output_options:
+        live_output_options["file_path"] = None
+    elif live_output_options["type"] == "graph" and live_output_options["file_path"] is not None:
+        live_output_options["type"] = "figure"
 
 
-class LiveDisplayer():
+class LiveDisplayer:
     """
     holds information required for displaying information when live_output = True
     """
 
     def __init__(self, model=None, timeline=None, number_of_trajectories=1, live_output_options={}, resume=False):
 
-        self.display_type = live_output_options['type']
-        self.display_interval = live_output_options['interval']
-        self.file_path = live_output_options['file_path']
+        self.display_type = live_output_options["type"]
+        self.display_interval = live_output_options["interval"]
+        self.file_path = live_output_options["file_path"]
         self.model = model
         self.resume = resume
         self.timeline = timeline
         self.timeline_len = timeline.size
         self.x_shift = int(timeline[0])
         self.number_of_trajectories = number_of_trajectories
-        self.clear_output = live_output_options['clear_output']
+        self.clear_output = live_output_options["clear_output"]
         species_mappings = model._listOfSpecies
         self.species = list(species_mappings.keys())
         self.number_species = len(self.species)
@@ -138,22 +145,24 @@ class LiveDisplayer():
             print(species[:10].ljust(10), end="|", file=file_obj)
         print("", file=file_obj)
 
-    '''
+    """
     curr_state and curr_time should be list of len 1 to get reference
-    '''
+    """
+
     def display(self, curr_state, curr_time, trajectory_base, finished=False):
         from IPython.display import clear_output
         from math import floor
+
         curr_time = curr_time[0]
         curr_state = curr_state[0]
 
         # necessary for __f function in hybrid solver
-        if 't' in curr_state:
-            if curr_state['t'] > curr_time:
-                curr_time = curr_state['t']
-        elif 'time' in curr_state:
-            if curr_state['time'] > curr_time:
-                curr_time = curr_state['time']
+        if "t" in curr_state:
+            if curr_state["t"] > curr_time:
+                curr_time = curr_state["t"]
+        elif "time" in curr_state:
+            if curr_state["time"] > curr_time:
+                curr_time = curr_state["time"]
 
         if self.file_path is None or self.display_type == "graph":
             if self.clear_output:
@@ -183,7 +192,9 @@ class LiveDisplayer():
             if self.resume is True:
                 print(f"progress = {round(((curr_time-self.x_shift)/self.timeline_len)*100, 2)} %\n", file=file_obj)
             else:
-                print(f"progress = {round((curr_time / (self.timeline_len + self.x_shift)) * 100, 2) }%\n", file=file_obj)
+                print(
+                    f"progress = {round((curr_time / (self.timeline_len + self.x_shift)) * 100, 2) }%\n", file=file_obj
+                )
 
         elif self.display_type == "graph":
 
@@ -201,14 +212,20 @@ class LiveDisplayer():
             plt.title(self.trajectory_header())
             for i in range(self.number_species):
                 line_color = common_rgb_values()[(i) % len(common_rgb_values())]
-                plt.plot(trajectory_base[0][:, 0][:entry_count].tolist(),
-                         trajectory_base[0][:, i + 1][:entry_count].tolist(), color=line_color,
-                         label=self.species[i])
+                plt.plot(
+                    trajectory_base[0][:, 0][:entry_count].tolist(),
+                    trajectory_base[0][:, i + 1][:entry_count].tolist(),
+                    color=line_color,
+                    label=self.species[i],
+                )
 
-                plt.plot([entry_count - 1, curr_time - self.timeline[0]], [trajectory_base[0][:, i + 1][entry_count - 1]
-                    , curr_state[self.species[i]]], linewidth=3,
-                         color=line_color)
-            plt.legend(loc='upper right')
+                plt.plot(
+                    [entry_count - 1, curr_time - self.timeline[0]],
+                    [trajectory_base[0][:, i + 1][entry_count - 1], curr_state[self.species[i]]],
+                    linewidth=3,
+                    color=line_color,
+                )
+            plt.legend(loc="upper right")
             plt.show()
 
         elif self.display_type == "figure":
@@ -217,7 +234,7 @@ class LiveDisplayer():
             from gillespy2.core.results import common_rgb_values
 
             entry_count = floor(curr_time) - self.x_shift
-            
+
             trace_list = []
             for i, species in enumerate(self.species):
                 line_dict = {"color": common_rgb_values()[(i) % len(common_rgb_values())]}
@@ -225,13 +242,15 @@ class LiveDisplayer():
                     go.Scatter(
                         x=trajectory_base[0][:, 0][:entry_count].tolist(),
                         y=trajectory_base[0][:, i + 1][:entry_count].tolist(),
-                        mode="lines", name=species, line=line_dict, legendgroup=species
+                        mode="lines",
+                        name=species,
+                        line=line_dict,
+                        legendgroup=species,
                     )
                 )
 
             layout = go.Layout(
-                showlegend=True, title=self.trajectory_header(),
-                xaxis={"range": [self.timeline[0], self.timeline[-1]]}
+                showlegend=True, title=self.trajectory_header(), xaxis={"range": [self.timeline[0], self.timeline[-1]]}
             )
 
             fig = dict(data=trace_list, layout=layout)

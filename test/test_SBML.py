@@ -59,12 +59,18 @@ class TestSBML(unittest.TestCase):
 
             for before, after in TestSBML.converted_symbols.items():
                 with self.subTest("Testing SBML conversion", before=before, after=after):
-                    self.assertTrue(f"x{before}x" in sbml_model.listOfSpecies,
-                                    "Species name 'xlnx' was unexpectedly modified during SBML import")
-                    self.assertIsNone(re.search(rf'\b{before}\b', test_rule),
-                                      f"Expected SBML formula '{test_rule}' to remove all instances of '{before}'")
-                    self.assertIsNotNone(re.search(rf'\b{after}\b', test_rule),
-                                         f"Expected SBML formula '{test_rule} to convert all instances of '{after}'")
+                    self.assertTrue(
+                        f"x{before}x" in sbml_model.listOfSpecies,
+                        "Species name 'xlnx' was unexpectedly modified during SBML import",
+                    )
+                    self.assertIsNone(
+                        re.search(rf"\b{before}\b", test_rule),
+                        f"Expected SBML formula '{test_rule}' to remove all instances of '{before}'",
+                    )
+                    self.assertIsNotNone(
+                        re.search(rf"\b{after}\b", test_rule),
+                        f"Expected SBML formula '{test_rule} to convert all instances of '{after}'",
+                    )
         except ImportError:
             return
 
@@ -101,5 +107,5 @@ class TestSBML(unittest.TestCase):
         self.fail()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
