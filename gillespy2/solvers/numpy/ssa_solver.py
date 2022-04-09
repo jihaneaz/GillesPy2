@@ -340,7 +340,7 @@ class NumPySSASolver(GillesPySolver):
                             propensity_sums[propensity_functions[i][1]] = propensity_functions[i][0](species_states)
 
                             if debug:
-                                print('new propensity sum: ', propensity_sums[i])
+                                print('new propensity sum: ', propensity_sums[propensity_functions[i][1]])
                         break
             data = {
                 'time': timeline
