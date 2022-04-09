@@ -23,6 +23,7 @@ import pydoc
 import hashlib
 
 from json import JSONEncoder
+from typing import Optional
 
 import numpy
 import gillespy2
@@ -35,7 +36,7 @@ class Jsonify:
 
     _translation_table = None
 
-    def to_json(self, encode_private=True) -> str:
+    def to_json(self, encode_private=True) -> Optional[str]:
         """
         Convert self into a json string.
 
@@ -46,7 +47,10 @@ class Jsonify:
         """
 
         encoder = ComplexJsonCoder(encode_private=encode_private)
-        return json.dumps(copy.deepcopy(self), indent=4, sort_keys=True, default=encoder.default)
+        try:
+            return json.dumps(copy.deepcopy(self), indent=4, sort_keys=True, default=encoder.default)
+        except TypeError:
+            return None
 
     @classmethod
     def from_json(cls, json_str: str) -> object:
@@ -139,7 +143,7 @@ class Jsonify:
         """
         return {k: v for k, v in vars(self).items() if not k.startswith("_")}
 
-    def get_json_hash(self, ignore_whitespace=True, hash_private_vals=False) -> str:
+    def get_json_hash(self, ignore_whitespace=True, hash_private_vals=False) -> Optional[str]:
         """
         Get the hash of the json representation of self.
 
@@ -159,7 +163,10 @@ class Jsonify:
 
         # If ignore_whitespace is set, strip out all whitespace characters.
         if ignore_whitespace:
-            model_json = re.sub(r"\s+", "", model_json)
+            try:
+                model_json = re.sub(r"\s+", "", model_json)
+            except TypeError:
+                return None
 
         return hashlib.md5(str.encode(model_json)).hexdigest()
 
