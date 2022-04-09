@@ -16,14 +16,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import math
 from collections import OrderedDict
 from typing import Optional
-from gillespy2.core import Species, Reaction, Parameter, Model, RateRule
-from gillespy2.solvers.cpp.build.expression import Expression
-from gillespy2.core import log
-from gillespy2.core.gillespyError import SimulationError
 
-import math
+from gillespy2.core import Model, Parameter, RateRule, Reaction, Species, log
+from gillespy2.core.gillespyError import SimulationError
+from gillespy2.solvers.cpp.build.expression import Expression
 
 
 class SanitizedModel:

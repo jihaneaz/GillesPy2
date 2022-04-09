@@ -16,14 +16,17 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from threading import Thread, Event
-from gillespy2.core.results import Results
+import math
+import random
+from threading import Event, Thread
+
+import numpy as np
+
 from gillespy2.core import GillesPySolver, log
 from gillespy2.core.gillespyError import *
+from gillespy2.core.results import Results
 from gillespy2.solvers.utilities import solverutils as nputils
-import random
-import math
-import numpy as np
+
 np.set_printoptions(suppress=True)
 
 
@@ -35,43 +38,75 @@ class NumPySSASolver(GillesPySolver):
     pause_event = None
 
     def __init__(self, model=None):
-        name = 'NumPySSASolver'
-        rc = 0
-        stop_event = None
-        result = None
-        pause_event = None
+        # name = "NumPySSASolver"
+        # rc = 0
+        # stop_event = None
+        # result = None
+        # pause_event = None
+        super().__init__(model)
         self.model = model
 
     def get_solver_settings(self):
         """
         :returns: Tuple of strings, denoting all keyword argument for this solvers run() method.
         """
-        return ('model', 't', 'number_of_trajectories', 'increment', 'seed', 'debug', 'timeout')
+        return "model", "t", "number_of_trajectories", "increment", "seed", "debug", "timeout"
 
     @classmethod
-    def run(self, model=None, t=20, number_of_trajectories=1, increment=None, seed=None, debug=False, show_labels=True,
-            live_output=None, live_output_options={}, timeout=None, resume=None, **kwargs):
+    def run(
+        self,
+        model=None,
+        t=20,
+        number_of_trajectories=1,
+        increment=None,
+        seed=None,
+        debug=False,
+        show_labels=True,
+        live_output=None,
+        live_output_options=None,
+        timeout=None,
+        resume=None,
+        **kwargs,
+    ):
 
         """
         Run the SSA algorithm using a NumPy for storing the data in arrays and generating the timeline.
 
         :param model: The model on which the solver will operate.
+
         :param t: The end time of the solver.
+
         :param number_of_trajectories: The number of times to sample the chemical master equation. Each
             trajectory will be returned at the end of the simulation.
+
         :param increment: The time step of the solution.
+
         :param seed: The random seed for the simulation. Defaults to None.
+
         :param debug: Set to True to provide additional debug information about the
             simulation.
-        :param resume: Result of a previously run simulation, to be resumed
-        :param live_output: str The type of output to be displayed by solver. Can be "progress", "text", or "graph".
+        :type debug: bool
+
+        :param show_labels:
+        :type show_labels: bool
+
+        :param live_output: The type of output to be displayed by solver. Can be "progress", "text", or "graph".
+        :type live_output: str
+
         :param live_output_options: dictionary contains options for live_output. By default {"interval":1}.
             "interval" specifies seconds between displaying.
             "clear_output" specifies if display should be refreshed with each display
 
+        :param timeout:
+        :type timeout:
+
+        :param resume: Result of a previously run simulation, to be resumed
+
         :returns: a list of each trajectory simulated.
         """
 
+        if live_output_options is None:
+            live_output_options = {}
         if isinstance(self, type):
             self = NumPySSASolver(model=model)
         if self.model is None:
@@ -92,76 +127,93 @@ class NumPySSASolver(GillesPySolver):
             timeout = None
         if len(kwargs) > 0:
             for key in kwargs:
-                log.warning('Unsupported keyword argument to {0} solver: {1}'.format(self.name, key))
+                log.warning("Unsupported keyword argument to {0} solver: {1}".format(self.name, key))
 
         # create numpy array for timeline
         if resume is not None:
             # start where we last left off if resuming a simulation
-            lastT = resume['time'][-1]
-            step = lastT - resume['time'][-2]
-            timeline = np.arange(lastT, t + step, step)
+            last_t = resume["time"][-1]
+            step = last_t - resume["time"][-2]
+            timeline = np.arange(last_t, t + step, step)
         else:
             timeline = np.linspace(0, t, int(round(t / increment + 1)))
 
         species = list(self.model._listOfSpecies.keys())
 
-        trajectory_base, tmpSpecies = nputils.numpy_trajectory_base_initialization(self.model, number_of_trajectories,
-                                                                                   timeline, species, resume=resume)
+        trajectory_base, tmp_species = nputils.numpy_trajectory_base_initialization(
+            self.model, number_of_trajectories, timeline, species, resume=resume
+        )
 
         # curr_time and curr_state are list of len 1 so that __run receives reference
         if resume is not None:
-            total_time = [resume['time'][-1]]
+            total_time = [resume["time"][-1]]
         else:
             total_time = [0]
 
         curr_state = [None]
         live_grapher = [None]
 
-        sim_thread = Thread(target=self.___run, args=(curr_state, total_time, timeline, trajectory_base,
-                                                      live_grapher,), kwargs={'t': t, 'number_of_trajectories':
-                                                                              number_of_trajectories,
-                                                                              'increment': increment,
-                                                                              'seed': seed, 'debug': debug,
-                                                                              'show_labels': show_labels,
-                                                                              'timeout': timeout,
-                                                                              'resume': resume, })
+        sim_thread = Thread(
+            target=self.___run,
+            args=(
+                curr_state,
+                total_time,
+                timeline,
+                trajectory_base,
+                live_grapher,
+            ),
+            kwargs={
+                "t": t,
+                "number_of_trajectories": number_of_trajectories,
+                "increment": increment,
+                "seed": seed,
+                "debug": debug,
+                "show_labels": show_labels,
+                "timeout": timeout,
+                "resume": resume,
+            },
+        )
         try:
             time = 0
             sim_thread.start()
+
             if live_output is not None:
                 import gillespy2.core.liveGraphing
-                live_output_options['type'] = live_output
+
+                live_output_options["type"] = live_output
                 gillespy2.core.liveGraphing.valid_graph_params(live_output_options)
                 if resume is not None:
-                    resumeTest = True  # If resuming, relay this information to live_grapher
+                    resume_test = True  # If resuming, relay this information to live_grapher
                 else:
-                    resumeTest = False
-                live_grapher[0] = gillespy2.core.liveGraphing.LiveDisplayer(self.model, timeline, number_of_trajectories,
-                                                                             live_output_options,resume = resumeTest)
-                display_timer = gillespy2.core.liveGraphing.RepeatTimer(live_output_options['interval'],
-                                                                        live_grapher[0].display, args=(curr_state,
-                                                                                                       total_time,
-                                                                                                       trajectory_base,
-                                                                                                       live_output
-                                                                                                       )
-                                                                        )
+                    resume_test = False
+                live_grapher[0] = gillespy2.core.liveGraphing.LiveDisplayer(
+                    self.model, timeline, number_of_trajectories, live_output_options, resume=resume_test
+                )
+                display_timer = gillespy2.core.liveGraphing.RepeatTimer(
+                    live_output_options["interval"],
+                    live_grapher[0].display,
+                    args=(curr_state, total_time, trajectory_base, live_output),
+                )
                 display_timer.start()
 
             if timeout is not None:
                 while sim_thread.is_alive():
-                    sim_thread.join(.1)
-                    time += .1
+                    sim_thread.join(0.1)
+                    time += 0.1
                     if time >= timeout:
                         break
             else:
                 while sim_thread.is_alive():
-                    sim_thread.join(.1)
+                    sim_thread.join(0.1)
 
             if live_grapher[0] is not None:
                 display_timer.cancel()
+
             self.stop_event.set()
+
             while self.result is None:
                 pass
+
         except KeyboardInterrupt:
             if live_output:
                 display_timer.pause = True
@@ -169,47 +221,88 @@ class NumPySSASolver(GillesPySolver):
             self.pause_event.set()
             while self.result is None:
                 pass
-        if hasattr(self, 'has_raised_exception'):
+
+        if hasattr(self, "has_raised_exception"):
             raise SimulationError(
                 f"Error encountered while running simulation:\nReturn code: {int(self.rc)}.\n"
             ) from self.has_raised_exception
 
         return Results.build_from_solver_results(self, live_output_options)
 
-    def ___run(self, curr_state, total_time, timeline, trajectory_base, live_grapher, t=20,
-               number_of_trajectories=1, increment=0.05, seed=None, debug=False, show_labels=True, resume=None,
-               timeout=None):
+    def ___run(
+        self,
+        curr_state,
+        total_time,
+        timeline,
+        trajectory_base,
+        live_grapher,
+        t=20,
+        number_of_trajectories=1,
+        increment=0.05,
+        seed=None,
+        debug=False,
+        show_labels=True,
+        resume=None,
+        timeout=None,
+    ):
 
         try:
-            self.__run(curr_state, total_time, timeline, trajectory_base, live_grapher, t, number_of_trajectories,
-                       increment, seed, debug, show_labels, resume, timeout)
+            self.__run(
+                curr_state,
+                total_time,
+                timeline,
+                trajectory_base,
+                live_grapher,
+                t,
+                number_of_trajectories,
+                increment,
+                seed,
+                debug,
+                show_labels,
+                resume,
+                timeout,
+            )
         except Exception as e:
             self.has_raised_exception = e
             self.result = []
             return [], -1
 
-    def __run(self, curr_state, total_time, timeline, trajectory_base, live_grapher, t=20,
-              number_of_trajectories=1, increment=0.05, seed=None, debug=False, show_labels=True,
-              resume=None,  timeout=None):
+    def __run(
+        self,
+        curr_state,
+        total_time,
+        timeline,
+        trajectory_base,
+        live_grapher,
+        t=20,
+        number_of_trajectories=1,
+        increment=0.05,
+        seed=None,
+        debug=False,
+        show_labels=True,
+        resume=None,
+        timeout=None,
+    ):
 
         # for use with resume, determines how much excess data to cut off due to
         # how species and time are initialized to 0
-        timeStopped = 0
+        time_stopped = 0
 
         if resume is not None:
             if resume[0].model != self.model:
-                raise gillespyError.ModelError('When resuming, one must not alter the model being resumed.')
-            if t < resume['time'][-1]:
-                raise gillespyError.ExecutionError(
+                raise ModelError("When resuming, one must not alter the model being resumed.")
+            if t < resume["time"][-1]:
+                raise ExecutionError(
                     "'t' must be greater than previous simulations end time, or set in the run() method as the "
-                    "simulations next end time")
+                    "simulations next end time"
+                )
 
         random.seed(seed)
 
         species_mappings, species, parameter_mappings, number_species = nputils.numpy_initialization(self.model)
 
         # create dictionary of all constant parameters for propensity evaluation
-        parameters = {'V': self.model.volume}
+        parameters = {"V": self.model.volume}
         for paramName, param in self.model.listOfParameters.items():
             parameters[parameter_mappings[paramName]] = param.value
 
@@ -228,15 +321,24 @@ class NumPySSASolver(GillesPySolver):
         for i, reaction in enumerate(reactions):
             # replace all references to species with array indices
             for j, spec in enumerate(species):
-                species_changes[i][j] = self.model.listOfReactions[reaction].products.get(self.model.listOfSpecies[spec], 0) \
-                                        - self.model.listOfReactions[reaction].reactants.get(self.model.listOfSpecies[spec], 0)
+                species_changes[i][j] = self.model.listOfReactions[reaction].products.get(
+                    self.model.listOfSpecies[spec], 0
+                ) - self.model.listOfReactions[reaction].reactants.get(self.model.listOfSpecies[spec], 0)
                 if debug:
-                    print('species_changes: {0},i={1}, j={2}... {3}'.format(species, i, j, species_changes[i][j]))
-            propensity_functions[reaction] = [eval('lambda S:' + self.model.listOfReactions[reaction].
-                                                   sanitized_propensity_function(species_mappings, parameter_mappings),
-                                                   parameters), i]
+                    print("species_changes: {0},i={1}, j={2}... {3}".format(species, i, j, species_changes[i][j]))
+            propensity_functions[reaction] = [
+                eval(
+                    "lambda S:"
+                    + self.model.listOfReactions[reaction].sanitized_propensity_function(
+                        species_mappings, parameter_mappings
+                    ),
+                    parameters,
+                ),
+                i,
+            ]
+
         if debug:
-            print('propensity_functions', propensity_functions)
+            print("propensity_functions", propensity_functions)
 
         # begin simulating each trajectory
         simulation_data = []
@@ -245,7 +347,7 @@ class NumPySSASolver(GillesPySolver):
                 self.rc = 33
                 break
             elif self.pause_event.is_set():
-                timeStopped = timeline[entry_count]
+                time_stopped = timeline[entry_count]
                 break
 
             # For multi trajectories, live_grapher needs to be informed of trajectory increment
@@ -258,7 +360,7 @@ class NumPySSASolver(GillesPySolver):
             curr_state[0] = {}
             # curr_time and curr_state are list of len 1 so that __run receives reference
             if resume is not None:
-                curr_time = [resume['time'][-1]]
+                curr_time = [resume["time"][-1]]
             else:
                 curr_time = [0]
 
@@ -275,7 +377,7 @@ class NumPySSASolver(GillesPySolver):
                     self.rc = 33
                     break
                 elif self.pause_event.is_set():
-                    timeStopped = timeline[entry_count]
+                    time_stopped = timeline[entry_count]
                     break
                 # determine next reaction
 
@@ -285,11 +387,11 @@ class NumPySSASolver(GillesPySolver):
                     propensity_sums[i] = propensity_functions[reactions[i]][0](species_states)
 
                     if debug:
-                        print('propensity: ', propensity_sums[i])
+                        print("propensity: ", propensity_sums[i])
 
                 propensity_sum = np.sum(propensity_sums)
                 if debug:
-                    print('propensity_sum: ', propensity_sum)
+                    print("propensity_sum: ", propensity_sum)
                 # if no more reactions, quit
                 if propensity_sum <= 0:
                     trajectory[entry_count:, 1:] = list(species_states)
@@ -300,10 +402,10 @@ class NumPySSASolver(GillesPySolver):
                 curr_time[0] += -math.log(rand) / propensity_sum
                 total_time[0] += -math.log(rand) / propensity_sum
                 if debug:
-                    print('cumulative sum: ', cumulative_sum)
-                    print('entry count: ', entry_count)
-                    print('timeline.size: ', timeline.size)
-                    print('curr_time: ', curr_time[0])
+                    print("cumulative sum: ", cumulative_sum)
+                    print("entry count: ", entry_count)
+                    print("timeline.size: ", timeline.size)
+                    print("curr_time: ", curr_time[0])
                 # determine time passed in this reaction
 
                 while entry_count < timeline.size and timeline[entry_count] <= curr_time[0]:
@@ -311,7 +413,7 @@ class NumPySSASolver(GillesPySolver):
                         self.rc = 33
                         break
                     elif self.pause_event.is_set():
-                        timeStopped = timeline[entry_count]
+                        time_stopped = timeline[entry_count]
                         break
                     trajectory[entry_count, 1:] = species_states
                     entry_count += 1
@@ -319,35 +421,33 @@ class NumPySSASolver(GillesPySolver):
                 for potential_reaction in range(number_reactions):
                     cumulative_sum -= propensity_sums[potential_reaction]
                     if debug:
-                        print('if <=0, fire: ', cumulative_sum)
+                        print("if <=0, fire: ", cumulative_sum)
                     if cumulative_sum <= 0:
 
-                        for i,spec in enumerate(self.model.listOfSpecies):
+                        for i, spec in enumerate(self.model.listOfSpecies):
                             curr_state[0][spec] += species_changes[potential_reaction][i]
 
-                        reacName = reactions[potential_reaction]
+                        reac_name = reactions[potential_reaction]
                         if debug:
-                            print('current state: ', curr_state[0])
-                            print('species_changes: ', species_changes)
-                            print('updating: ', potential_reaction)
+                            print("current state: ", curr_state[0])
+                            print("species_changes: ", species_changes)
+                            print("updating: ", potential_reaction)
 
                         species_states = list(curr_state[0].values())
-                        for i in dependent_rxns[reacName]['dependencies']:
+                        for i in dependent_rxns[reac_name]["dependencies"]:
                             propensity_sums[propensity_functions[i][1]] = propensity_functions[i][0](species_states)
 
                             if debug:
-                                print('new propensity sum: ', propensity_sums[i])
+                                print("new propensity sum: ", propensity_sums[i])
                         break
-            data = {
-                'time': timeline
-            }
+            data = {"time": timeline}
             for i in range(number_species):
-                data[species[i]] = trajectory[:, i+1]
+                data[species[i]] = trajectory[:, i + 1]
             simulation_data.append(data)
 
         # If simulation has been paused, or tstopped !=0
-        if timeStopped != 0 or resume is not None:
-            simulation_data = nputils.numpy_resume(timeStopped, simulation_data, resume=resume)
+        if time_stopped != 0 or resume is not None:
+            simulation_data = nputils.numpy_resume(time_stopped, simulation_data, resume=resume)
 
         self.result = simulation_data
         return self.result, self.rc

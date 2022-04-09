@@ -89,18 +89,16 @@ def run_profiler(model: Model, solver: CSolver, trajectories=4, timesteps=101, e
     """
     # The simulation is built without running the solver directly.
     # "Steal" the solver's build engine if it exists, otherwise make one.
-    build: BuildEngine = solver.build_engine \
-        if isinstance(solver, CSolver) and solver.build_engine is not None \
-        else BuildEngine()
+    build: BuildEngine = (
+        solver.build_engine if isinstance(solver, CSolver) and solver.build_engine is not None else BuildEngine()
+    )
 
     try:
         build.makefile = MAKEFILE_PATH
         build.prepare(model)
 
         # Prepare the location where performance data (gmon.out) is written.
-        gmon_env = {
-            "GMON_OUT_PREFIX": f"{str(build.output_dir)}/profile"
-        }
+        gmon_env = {"GMON_OUT_PREFIX": f"{str(build.output_dir)}/profile"}
 
         exe = build.build_simulation(simulation_name=solver.target)
 
@@ -111,10 +109,14 @@ def run_profiler(model: Model, solver: CSolver, trajectories=4, timesteps=101, e
         # This profiler data can then be parsed using gprof.
         process_args = [
             exe,
-            "-trajectories", str(trajectories),
-            "-timesteps", str(timesteps),
-            "-end", str(end_time),
-            "-increment", str(end_time / (timesteps - 1))
+            "-trajectories",
+            str(trajectories),
+            "-timesteps",
+            str(timesteps),
+            "-end",
+            str(end_time),
+            "-increment",
+            str(end_time / (timesteps - 1)),
         ]
         start = time.perf_counter()
         subprocess.check_call(args=process_args, stdout=subprocess.DEVNULL, env=gmon_env)
@@ -132,9 +134,7 @@ def run_profiler(model: Model, solver: CSolver, trajectories=4, timesteps=101, e
                 break
 
         if gprof_data is None:
-            raise EnvironmentError(
-                "Profiler data was not found in the current environment; aborting"
-            )
+            raise EnvironmentError("Profiler data was not found in the current environment; aborting")
 
         # Run gprof to process the profiler output.
         # -b = brief, shows minimal output

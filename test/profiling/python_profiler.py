@@ -28,6 +28,7 @@ from gillespy2.core import Model
 from gillespy2.core import GillesPySolver
 from gillespy2.solvers.cpp.c_solver import CSolver
 
+
 def run_profiler(model: Model, solver: GillesPySolver, trajectories=4, timesteps=101) -> PerformanceData:
     """
     Profile a Python solver running the specified Model.
@@ -50,13 +51,10 @@ def run_profiler(model: Model, solver: GillesPySolver, trajectories=4, timesteps
     perf_data = PerformanceData()
     perf_data.execution_time = stats.total_tt * 1000
     perf_data.sample_time = 0
-    
+
     worst_func = stats.fcn_list[0]
     (cc, nc, tt, ct, callers) = stats.stats[worst_func]
-    perf_data.worst_entry = (
-        worst_func, 
-        PerformanceEntry(tt, round((tt / stats.total_tt) * 100))
-    )
+    perf_data.worst_entry = (worst_func, PerformanceEntry(tt, round((tt / stats.total_tt) * 100)))
 
     for func in stats.fcn_list:
         (cc, nc, tt, ct, callers) = stats.stats[func]

@@ -17,9 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import ast  # for dependency graphing
+
 import numpy as np
-from gillespy2.core import log, Species
-from gillespy2.core import ModelError
+
+from gillespy2.core import ModelError, Species
 
 """
 NUMPY SOLVER UTILITIES BELOW
@@ -54,11 +55,11 @@ def numpy_trajectory_base_initialization(model, number_of_trajectories, timeline
     return trajectory_base, tmpSpecies
 
 
-def numpy_resume(timeStopped, simulation_data, resume=None):
+def numpy_resume(time_stopped, simulation_data, resume=None):
     """
     Helper function for when resuming a simulation in a numpy based solver.
 
-    :param timeStopped: The time in which the simulation was stopped.
+    :param time_stopped: The time in which the simulation was stopped.
     :param simulation_data: The current models simulation data, after being parsed in the numpy solver of choice.
 
     :param resume: The previous simulations data, that is being resumed
@@ -66,10 +67,10 @@ def numpy_resume(timeStopped, simulation_data, resume=None):
 
     :returns: Combined simulation data, the old resume data and the current simulation data.
     """
-    if timeStopped != 0:
-        if timeStopped != simulation_data[0]['time'][-1]:
-            tester = np.where(simulation_data[0]['time'] > timeStopped)[0].size
-            index = np.where(simulation_data[0]['time'] == timeStopped)[0][0]
+    if time_stopped != 0:
+        if time_stopped != simulation_data[0]["time"][-1]:
+            tester = np.where(simulation_data[0]["time"] > time_stopped)[0].size
+            index = np.where(simulation_data[0]["time"] == time_stopped)[0][0]
         if tester > 0:
             for i in simulation_data[0]:
                 simulation_data[0][i] = simulation_data[0][i][:index]
@@ -82,54 +83,58 @@ def numpy_resume(timeStopped, simulation_data, resume=None):
 
     return simulation_data
 
+
 """
 VARIABLE SOLVER METHODS
 """
 
 
-def update_species_init_values(listOfSpecies, species, variables, resume = None):
+def update_species_init_values(list_of_species, species, variables, resume=None):
     # Update Species Initial Values
-    populations = ''
+    populations = ""
     for i in range(len(species) - 1):
         if species[i] in variables:
-            populations += '{} '.format(float(variables[species[i]]))
+            populations += "{} ".format(float(variables[species[i]]))
         else:
             if resume is not None:
-                populations += '{} '.format(float(resume[species[i]][-1]))
+                populations += "{} ".format(float(resume[species[i]][-1]))
             else:
-                populations += '{} '.format(float(listOfSpecies[species[i]].initial_value))
+                populations += "{} ".format(float(list_of_species[species[i]].initial_value))
     if species[-1] in variables:
-        populations += '{}'.format(float(variables[species[-1]]))
+        populations += "{}".format(float(variables[species[-1]]))
     else:
         if resume is not None:
-            populations += '{} '.format(float(resume[species[-1]][-1]))
+            populations += "{} ".format(float(resume[species[-1]][-1]))
         else:
-            populations += '{}'.format(float(listOfSpecies[species[-1]].initial_value))
+            populations += "{}".format(float(list_of_species[species[-1]].initial_value))
     return populations
 
-def change_param_values(listOfParameters, parameters, volume, variables):
+
+def change_param_values(list_of_parameters, parameters, volume, variables):
     # Update Parameter Values
-    parameter_values = ''
+    parameter_values = ""
     for i in range(len(parameters) - 1):
         if parameters[i] in variables:
-            parameter_values += '{} '.format(variables[parameters[i]])
+            parameter_values += "{} ".format(variables[parameters[i]])
         else:
-            if parameters[i] == 'vol':
-                parameter_values += '{} '.format(volume)
+            if parameters[i] == "vol":
+                parameter_values += "{} ".format(volume)
             else:
-                parameter_values += '{} '.format(listOfParameters[parameters[i]].expression)
+                parameter_values += "{} ".format(list_of_parameters[parameters[i]].expression)
     if parameters[-1] in variables:
-        parameter_values += '{}'.format(variables[parameters[-1]])
+        parameter_values += "{}".format(variables[parameters[-1]])
     else:
-        if parameters[-1] == 'vol':
-            parameter_values += '{}'.format(volume)
+        if parameters[-1] == "vol":
+            parameter_values += "{}".format(volume)
         else:
-            parameter_values += '{}'.format(listOfParameters[parameters[-1]].expression)
+            parameter_values += "{}".format(list_of_parameters[parameters[-1]].expression)
     return parameter_values
+
 
 """
 Below are two functions used for creating dependency graphs in the C solvers, and Numpy Solvers.
 """
+
 
 def species_parse(model, custom_prop_fun):
     """
@@ -151,7 +156,7 @@ def species_parse(model, custom_prop_fun):
                 pass
 
     expr = custom_prop_fun
-    expr = ast.parse(expr, mode='eval')
+    expr = ast.parse(expr, mode="eval")
     expr = SpeciesParser().visit(expr)
     return parsed_species
 
@@ -169,36 +174,38 @@ def dependency_grapher(model, reactions):
     dependent_rxns = {}
     for i in reactions:
         cust_spec = []
-        if model.listOfReactions[i].type == 'customized':
-            cust_spec = (species_parse(model, model.listOfReactions[i].propensity_function))
+        if model.listOfReactions[i].type == "customized":
+            cust_spec = species_parse(model, model.listOfReactions[i].propensity_function)
 
         for j in reactions:
 
             if i not in dependent_rxns:
-                dependent_rxns[i] = {'dependencies': []}
+                dependent_rxns[i] = {"dependencies": []}
             if j not in dependent_rxns:
-                dependent_rxns[j] = {'dependencies': []}
+                dependent_rxns[j] = {"dependencies": []}
             if i == j:
                 continue
 
             reactantsI = list(model.listOfReactions[i].reactants.keys())
             reactantsJ = list(model.listOfReactions[j].reactants.keys())
 
-            if j not in dependent_rxns[i]['dependencies']:
+            if j not in dependent_rxns[i]["dependencies"]:
                 if any(elem in reactantsI for elem in reactantsJ):
-                    if i not in dependent_rxns[j]['dependencies']:
-                        dependent_rxns[j]['dependencies'].append(i)
-                    dependent_rxns[i]['dependencies'].append(j)
+                    if i not in dependent_rxns[j]["dependencies"]:
+                        dependent_rxns[j]["dependencies"].append(i)
+                    dependent_rxns[i]["dependencies"].append(j)
 
-            if i not in dependent_rxns[j]['dependencies']:
-                if any(elem in list(model.listOfReactions[i].products.keys()) for elem in
-                       list(model.listOfReactions[j].reactants.keys())):
-                    dependent_rxns[j]['dependencies'].append(i)
+            if i not in dependent_rxns[j]["dependencies"]:
+                if any(
+                    elem in list(model.listOfReactions[i].products.keys())
+                    for elem in list(model.listOfReactions[j].reactants.keys())
+                ):
+                    dependent_rxns[j]["dependencies"].append(i)
 
             if cust_spec:
-                if any(elem in cust_spec for elem in list(model.listOfReactions[j].reactants)) or any \
-                            (elem in cust_spec for elem in list(model.listOfReactions[j].products)):
-                    dependent_rxns[i]['dependencies'].append(j)
+                if any(elem in cust_spec for elem in list(model.listOfReactions[j].reactants)) or any(
+                    elem in cust_spec for elem in list(model.listOfReactions[j].products)
+                ):
+                    dependent_rxns[i]["dependencies"].append(j)
 
     return dependent_rxns
-

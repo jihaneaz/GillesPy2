@@ -16,9 +16,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from gillespy2.core.sortableobject import SortableObject
 from gillespy2.core.gillespyError import *
 from gillespy2.core.jsonify import Jsonify
+from gillespy2.core.sortableobject import SortableObject
+
 
 class Parameter(SortableObject, Jsonify):
     """
@@ -31,7 +32,7 @@ class Parameter(SortableObject, Jsonify):
 
     :param expression: String for a function calculating parameter values. Should be
         evaluable in namespace of Model.
-    :type expression: str
+    :type expression: Any
     """
 
     def __init__(self, name="", expression=None):
@@ -48,7 +49,7 @@ class Parameter(SortableObject, Jsonify):
         self.expression = str(expression)
 
     def __str__(self):
-        return self.name + ': ' + str(self.expression)
+        return self.name + ": " + str(self.expression)
 
     def set_expression(self, expression):
         """
@@ -60,38 +61,41 @@ class Parameter(SortableObject, Jsonify):
         # namespace to the scalar value.
         from gillespy2.core import log
 
-        log.warning("'Parameter.set_expression' has been deprecated, future versions of GillesPy2 will not support"
-                    " this function. To set expression within a parameter, use Parameter.expression = expression")
+        log.warning(
+            "'Parameter.set_expression' has been deprecated, future versions of GillesPy2 will not support"
+            " this function. To set expression within a parameter, use Parameter.expression = expression"
+        )
 
         if expression is None:
             raise ParameterError("Parameter expression can not be none")
 
         self.expression = str(expression)
 
-
-
-    def _evaluate(self, namespace={}):
+    def _evaluate(self, namespace=None):
         """
         Evaluate the expression and return the (scalar) value in the given
         namespace.
 
-        :param namespace: The namespace in which to test evaulation of the parameter,
+        :param namespace: The namespace in which to test evaluation of the parameter,
             if it involves other parameters, etc.
         :type namespace: dict
         """
 
+        if namespace is None:
+            namespace = {}
         try:
-            self.value = (float(eval(self.expression, namespace)))
+            self.value = float(eval(self.expression, namespace))
         except Exception as error:
             raise ParameterError("Could not evaluate expression: {}.".format(str(error))) from error
 
     def sanitized_expression(self, species_mappings, parameter_mappings):
-        names = sorted(list(species_mappings.keys()) + list(parameter_mappings.keys()), key=lambda x: len(x),
-                       reverse=True)
-        replacements = [parameter_mappings[name] if name in parameter_mappings else species_mappings[name]
-                        for name in names]
+        names = sorted(
+            list(species_mappings.keys()) + list(parameter_mappings.keys()), key=lambda x: len(x), reverse=True
+        )
+        replacements = [
+            parameter_mappings[name] if name in parameter_mappings else species_mappings[name] for name in names
+        ]
         sanitized_expression = self.expression
-        for id, name in enumerate(names):
-            sanitized_expression = sanitized_expression.replace(
-                name, "{"+str(id)+"}")
+        for _id, name in enumerate(names):
+            sanitized_expression = sanitized_expression.replace(name, "{" + str(_id) + "}")
         return sanitized_expression.format(*replacements)

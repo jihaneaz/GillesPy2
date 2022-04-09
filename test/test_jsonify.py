@@ -24,6 +24,7 @@ from example_models import *
 from gillespy2.core import Model, Reaction, Parameter, Species, Results
 from gillespy2.core.jsonify import TranslationTable
 
+
 class TestJsonModels(unittest.TestCase):
     models = [
         Example,
@@ -36,12 +37,7 @@ class TestJsonModels(unittest.TestCase):
         Oregonator,
     ]
 
-    runnable_models = [
-        Example,
-        MichaelisMenten,
-        Tyson2StateOscillator,
-        Schlogl
-    ]
+    runnable_models = [Example, MichaelisMenten, Tyson2StateOscillator, Schlogl]
 
     def test_equality_of_named_models(self):
         """
@@ -51,10 +47,7 @@ class TestJsonModels(unittest.TestCase):
         for model in self.models:
             target = model()
 
-            self.assertEqual(
-                target, 
-                model.from_json(target.to_json())
-            )
+            self.assertEqual(target, model.from_json(target.to_json()))
 
     def test_equality_of_anon_models(self):
         """
@@ -65,10 +58,7 @@ class TestJsonModels(unittest.TestCase):
             target = model()
             anon_target = target.to_anon()
 
-            self.assertEqual(
-                anon_target, 
-                model.from_json(anon_target.to_json())
-            )
+            self.assertEqual(anon_target, model.from_json(anon_target.to_json()))
 
     def test_equality_of_named_results(self):
         """
@@ -108,19 +98,16 @@ class TestJsonModels(unittest.TestCase):
             model_2 = model()
 
             # Assert that the hash of the anonymized models are the same.
-            self.assertEqual(
-                model_1.to_anon().get_json_hash(), 
-                model_2.to_anon().get_json_hash()
-            )
+            self.assertEqual(model_1.to_anon().get_json_hash(), model_2.to_anon().get_json_hash())
 
             # Create a test class and change the variable insertion order.
             model_1 = model()
             model_1.var1 = "Hello"
             model_1.var2 = "world"
-            model_1.var3 = [ "Hello world!" ]
+            model_1.var3 = ["Hello world!"]
 
             model_2 = model()
-            model_2.var3 = [ "Hello world!" ]
+            model_2.var3 = ["Hello world!"]
             model_2.var2 = "world"
             model_2.var1 = "Hello"
 
@@ -128,33 +115,20 @@ class TestJsonModels(unittest.TestCase):
             translation_table = model_1.get_translation_table()
 
             # Assert that the JSON of the anonymized models are still the same.
-            self.assertEqual(
-                model_1.to_anon().to_json(), 
-                model_2.to_anon().to_json()
-            )
+            self.assertEqual(model_1.to_anon().to_json(), model_2.to_anon().to_json())
 
             # Assert that the hash of the anonymized models are still the same.
-            self.assertEqual(
-                model_1.to_anon().get_json_hash(),
-                model_2.to_anon().get_json_hash()
-            )
+            self.assertEqual(model_1.to_anon().get_json_hash(), model_2.to_anon().get_json_hash())
 
             # Assert that the translation table is the same.
-            self.assertEqual(
-                model_1.get_translation_table().to_json(), 
-                model_2.get_translation_table().to_json()
-            )
+            self.assertEqual(model_1.get_translation_table().to_json(), model_2.get_translation_table().to_json())
 
             # Assert that model_1's JSON is equivalent to model_2 -> anon -> json -> object -> named -> json.
-            self.assertEqual(
-                model_1.to_json(), 
-                Model.from_json(model_2.to_anon().to_json()).to_named().to_json()
-            )
+            self.assertEqual(model_1.to_json(), Model.from_json(model_2.to_anon().to_json()).to_named().to_json())
 
             # Assert that model_2's anon JSON hash is equivalent to model_2 -> anon -> json -> object -> json hash.
             self.assertEqual(
-                model_1.to_anon().get_json_hash(), 
-                Model.from_json(model_2.to_anon().to_json()).get_json_hash()
+                model_1.to_anon().get_json_hash(), Model.from_json(model_2.to_anon().to_json()).get_json_hash()
             )
 
     def test_named_to_anon_accuracy(self):
@@ -180,26 +154,19 @@ class TestJsonModels(unittest.TestCase):
             model_2 = model.from_json(model_1_json)
 
             # Assert that the anonymized model_1 and the new model_2 are identical.
-            self.assertEquals(
-                model_1.to_anon().to_json(),
-                model_2.to_json()
-            )
+            self.assertEquals(model_1.to_anon().to_json(), model_2.to_json())
 
             # Convert the new model_2 to named.
             model_2 = model_2.to_named()
 
             # Assert that model_1 and model_2 are still the same.
-            self.assertEquals(
-                model_1.to_json(),
-                model_2.to_json()
-            )
+            self.assertEquals(model_1.to_json(), model_2.to_json())
 
     def test_model_hash_whitespace_accuracy(self):
-        """ Test that differences in whitespace do not change the hash of a model. """
+        """Test that differences in whitespace do not change the hash of a model."""
         model_no_whitespace = MichaelisMenten()
         model_with_whitespace = MichaelisMenten()
 
-         
         X = Species(name="X", initial_value=int(0.65609071 * 300.0))
         Y = Species(name="Y", initial_value=int(0.85088331 * 300.0))
 
@@ -209,20 +176,17 @@ class TestJsonModels(unittest.TestCase):
         # Up to this point the JSON hash of the two models should be the same.
         self.assertEquals(model_no_whitespace.get_json_hash(), model_with_whitespace.get_json_hash())
 
-        # Add a custom reaction to both models, differing the amount of whitespace in the 
+        # Add a custom reaction to both models, differing the amount of whitespace in the
         # propensity functions.
         reaction_no_whitespace = Reaction(
-            name="X production", 
-            reactants={}, 
-            products={X: 1},
-            propensity_function="300*1.0/(1.0+(Y*Y/(300*300)))"
+            name="X production", reactants={}, products={X: 1}, propensity_function="300*1.0/(1.0+(Y*Y/(300*300)))"
         )
 
         reaction_with_whitespace = Reaction(
-            name="X production", 
-            reactants={}, 
+            name="X production",
+            reactants={},
             products={X: 1},
-            propensity_function="300      * 1.0 / (1.0 + (Y  *Y         /   (300  * 300)))"
+            propensity_function="300      * 1.0 / (1.0 + (Y  *Y         /   (300  * 300)))",
         )
 
         model_no_whitespace.add_reaction(reaction_no_whitespace)

@@ -19,21 +19,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 try:
     from tqdm import tqdm
 except ImportError:
-    raise ImportError('tqdm is required. Please install it.')
+    raise ImportError("tqdm is required. Please install it.")
 import statistics
 from itertools import product
 from scipy import stats
 from timeit import default_timer as timer
 import gillespy2
 from gillespy2.solvers.numpy import *
+
 # BasicODESolver, BasicRootSolver, BasicTauLeapingSolver, NumPySSASolver, TauLeapingSolver
 from gillespy2.solvers.cython import *
+
 # CythonSSASolver
 from gillespy2.solvers.cpp import *
+
 # SSACSolver
 from gillespy2.solvers.auto import *
+
 # SSASolver
 from gillespy2.solvers.stochkit import *
+
 # StochKitODESolver, StochKitSolver
 from example_models import *
 
@@ -49,7 +54,7 @@ def timing_battery(number_of_samples, acceptable_deviation):
         if isinstance(value, type) and issubclass(value, gillespy2.GillesPySolver) and value not in solver_list:
             solver_list.append(value)
 
-    model_list = [Example(), Trichloroethylene(), MichaelisMenten(), Schlogl()] #Update
+    model_list = [Example(), Trichloroethylene(), MichaelisMenten(), Schlogl()]  # Update
 
     timing_list = []
 
@@ -63,22 +68,26 @@ def timing_battery(number_of_samples, acceptable_deviation):
                 start = timer()
                 test_results = model.run(solver=solver)
                 stop = timer()
-                median_list.append(stop-start)
+                median_list.append(stop - start)
                 interior_stats = []
                 for species in standard_results[0].keys():
                     if solver == NumPySSASolver:
                         deviation = stats.ks_2samp(standard_results[0][species], test_results[0][species])[0]
                         if deviation > acceptable_deviation:
-                            print("Unacceptable deviation found on Model {} Solver {} with a deviation of {} on "
-                                  "iteration {}. Exiting.".format(model.name, solver.name, deviation, i))
+                            print(
+                                "Unacceptable deviation found on Model {} Solver {} with a deviation of {} on "
+                                "iteration {}. Exiting.".format(model.name, solver.name, deviation, i)
+                            )
                             exit()
                         else:
                             interior_stats.append(deviation)
                     else:
                         deviation = stats.ks_2samp(standard_results[0][species], test_results[species])[0]
                         if deviation > acceptable_deviation:
-                            print("Unacceptable deviation found on Model {} Solver {} with a deviation of {} on "
-                                  "iteration {}. Exiting.".format(model.name, solver.name, deviation, i))
+                            print(
+                                "Unacceptable deviation found on Model {} Solver {} with a deviation of {} on "
+                                "iteration {}. Exiting.".format(model.name, solver.name, deviation, i)
+                            )
                             exit()
                         else:
                             interior_stats.append(deviation)
@@ -87,10 +96,9 @@ def timing_battery(number_of_samples, acceptable_deviation):
                 print(e)
         median = statistics.median(median_list)
         timing_list.append([model, solver, median])
-    with open(output_file, 'w') as out_file:
+    with open(output_file, "w") as out_file:
         out_file.write(*timing_list)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     timing_battery()
-

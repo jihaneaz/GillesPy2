@@ -20,10 +20,11 @@ import unittest
 from example_models import *
 from gillespy2.core.gillespyError import *
 from gillespy2 import ODESolver
-#from TestBattery import *
+
+# from TestBattery import *
+
 
 class TestExampleModels(unittest.TestCase):
-
     def test_trichloroethylene_example(self):
         trichloroethylene_model = Trichloroethylene()
         results = trichloroethylene_model.run()
@@ -51,9 +52,10 @@ class TestExampleModels(unittest.TestCase):
     def test_tyson2StateOscillator_example(self):
         tyson2StateOscillator_model = Tyson2StateOscillator()
         results = tyson2StateOscillator_model.run()
-    
-    #def test_test_battery(self):
-        #timing_battery(100, 0.1)
 
-if __name__ == '__main__':
+    # def test_test_battery(self):
+    # timing_battery(100, 0.1)
+
+
+if __name__ == "__main__":
     unittest.main()

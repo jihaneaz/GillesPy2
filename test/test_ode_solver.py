@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
 import sys
+
 sys.path.append("..")
 import numpy as np
 import gillespy2
@@ -35,7 +36,7 @@ class TestBasicODESolver(unittest.TestCase):
             for label in [True, False]:
                 with self.subTest(number_of_trajectories=i, show_labels=label):
                     if i > 1:
-                        with self.assertLogs(level='WARN'):
+                        with self.assertLogs(level="WARN"):
                             results = model.run(solver=ODESolver, show_labels=label, number_of_trajectories=i)
                         self.assertEqual(len(results), i)
                     else:
@@ -52,18 +53,19 @@ class TestBasicODESolver(unittest.TestCase):
     def test_stoich2(self):
         class StoichTestModel(gillespy2.Model):
             def __init__(self, parameter_values=None):
-                gillespy2.Model.__init__(self, name='StochTest1')
-                A = gillespy2.Species(name='A', initial_value=10)
-                B = gillespy2.Species(name='B', initial_value=0)
+                gillespy2.Model.__init__(self, name="StochTest1")
+                A = gillespy2.Species(name="A", initial_value=10)
+                B = gillespy2.Species(name="B", initial_value=0)
                 self.add_species([A, B])
-                k = gillespy2.Parameter(name='k', expression=10)
+                k = gillespy2.Parameter(name="k", expression=10)
                 self.add_parameter([k])
-                r = gillespy2.Reaction(name='r', reactants={A: 2}, products={B:1}, rate=k)
+                r = gillespy2.Reaction(name="r", reactants={A: 2}, products={B: 1}, rate=k)
                 self.add_reaction([r])
                 self.timespan(np.linspace(0, 100, 101))
+
         model = StoichTestModel()
         result = model.run(solver=ODESolver)
-        self.assertAlmostEqual(result['B'][-1], 5, places=3)
+        self.assertAlmostEqual(result["B"][-1], 5, places=3)
 
     def test_run_example__with_increment_only(self):
         model = ExampleNoTspan()
@@ -78,25 +80,27 @@ class TestBasicODESolver(unittest.TestCase):
             model = Example()
             results = ODESolver.run(model=model, increment=0.2)
 
-
     def test_stoch3(self):
         class StochTestModel(gillespy2.Model):
             def __init__(self, parameter_values=None):
-                gillespy2.Model.__init__(self, name='StochTest1')
-                A = gillespy2.Species(name='A', initial_value=10)
-                B = gillespy2.Species(name='B', initial_value=0)
+                gillespy2.Model.__init__(self, name="StochTest1")
+                A = gillespy2.Species(name="A", initial_value=10)
+                B = gillespy2.Species(name="B", initial_value=0)
                 self.add_species([A, B])
-                k = gillespy2.Parameter(name='k', expression=10)
+                k = gillespy2.Parameter(name="k", expression=10)
                 self.add_parameter([k])
-                r = gillespy2.Reaction(name='r', reactants={A: 1}, products={B:1},
-                    propensity_function="k*A/vol") # testing if 'vol' is a pre-set variable
+                r = gillespy2.Reaction(
+                    name="r", reactants={A: 1}, products={B: 1}, propensity_function="k*A/vol"
+                )  # testing if 'vol' is a pre-set variable
                 self.add_reaction([r])
                 self.timespan(np.linspace(0, 100, 101))
+
         model = StochTestModel()
         result = model.run(solver=ODESolver)
         sys.stderr.write(f"\ntest_shoch3(): B={result['B'][-1]}\n\n")
-        self.assertGreater(result['B'][-1], 5)
+        self.assertGreater(result["B"][-1], 5)
 
-if __name__ == '__main__':
-    #unittest.main()
+
+if __name__ == "__main__":
+    # unittest.main()
     TestBasicODESolver().test_stoch3()

@@ -17,29 +17,78 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import warnings
+from collections import UserDict, UserList
 from datetime import datetime
+
 from gillespy2.core.gillespyError import *
 from gillespy2.core.jsonify import Jsonify
-from collections import UserDict, UserList
+
 
 # List of 50 hex color values used for plotting graphs
 def common_rgb_values():
-    return ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f',
-                         '#bcbd22', '#17becf', '#ff0000', '#00ff00', '#0000ff', '#ffff00', '#00ffff', '#ff00ff',
-                         '#800000', '#808000', '#008000', '#800080', '#008080', '#000080', '#ff9999', '#ffcc99',
-                         '#ccff99', '#cc99ff', '#ffccff', '#62666a', '#8896bb', '#77a096', '#9d5a6c', '#9d5a6c',
-                         '#eabc75', '#ff9600', '#885300', '#9172ad', '#a1b9c4', '#18749b', '#dadecf', '#c5b8a8',
-                         '#000117', '#13a8fe', '#cf0060', '#04354b', '#0297a0', '#037665', '#eed284', '#442244',
-                         '#ffddee', '#702afb']
+    return [
+        "#1f77b4",
+        "#ff7f0e",
+        "#2ca02c",
+        "#d62728",
+        "#9467bd",
+        "#8c564b",
+        "#e377c2",
+        "#7f7f7f",
+        "#bcbd22",
+        "#17becf",
+        "#ff0000",
+        "#00ff00",
+        "#0000ff",
+        "#ffff00",
+        "#00ffff",
+        "#ff00ff",
+        "#800000",
+        "#808000",
+        "#008000",
+        "#800080",
+        "#008080",
+        "#000080",
+        "#ff9999",
+        "#ffcc99",
+        "#ccff99",
+        "#cc99ff",
+        "#ffccff",
+        "#62666a",
+        "#8896bb",
+        "#77a096",
+        "#9d5a6c",
+        "#9d5a6c",
+        "#eabc75",
+        "#ff9600",
+        "#885300",
+        "#9172ad",
+        "#a1b9c4",
+        "#18749b",
+        "#dadecf",
+        "#c5b8a8",
+        "#000117",
+        "#13a8fe",
+        "#cf0060",
+        "#04354b",
+        "#0297a0",
+        "#037665",
+        "#eed284",
+        "#442244",
+        "#ffddee",
+        "#702afb",
+    ]
 
 
-def _plot_iterate(self, show_labels=True, included_species_list=[]):
+def _plot_iterate(self, show_labels=True, included_species_list=None):
     import matplotlib.pyplot as plt
-    for i, species in enumerate(self.data):
-        if species != 'time':
 
-            if species not in included_species_list and included_species_list:
-                continue
+    for i, species in enumerate(self.data):
+        if species != "time":
+
+            if included_species_list:
+                if species not in included_species_list:
+                    continue
 
             line_color = common_rgb_values()[(i - 1) % len(common_rgb_values())]
 
@@ -48,21 +97,23 @@ def _plot_iterate(self, show_labels=True, included_species_list=[]):
             else:
                 label = ""
 
-            plt.plot(self.data['time'], self.data[species], label=label, color=line_color)
+            plt.plot(self.data["time"], self.data[species], label=label, color=line_color)
 
 
-def _plotplotly_iterate(trajectory, show_labels=True, trace_list=None, line_dict=None, included_species_list=[]):
+def _plotplotly_iterate(trajectory, show_labels=True, trace_list=None, line_dict=None, included_species_list=None):
     """
     Helper method for Results .plotplotly() method
     """
 
+    if included_species_list is None:
+        included_species_list = []
     if trace_list is None:
         trace_list = []
 
     import plotly.graph_objs as go
 
     for i, species in enumerate(trajectory.data):
-        if species != 'time':
+        if species != "time":
 
             if species not in included_species_list and included_species_list:
                 continue
@@ -71,36 +122,37 @@ def _plotplotly_iterate(trajectory, show_labels=True, trace_list=None, line_dict
                 line_dict = {}
 
             # If number of species exceeds number of available colors, loop back through colors
-            line_dict['color'] = common_rgb_values()[(i-1)%len(common_rgb_values())]
+            line_dict["color"] = common_rgb_values()[(i - 1) % len(common_rgb_values())]
 
             if show_labels:
                 trace_list.append(
                     go.Scatter(
-                        x=trajectory.data['time'],
+                        x=trajectory.data["time"],
                         y=trajectory.data[species],
-                        mode='lines',
+                        mode="lines",
                         name=species,
                         line=line_dict,
-                        legendgroup=species
+                        legendgroup=species,
                     )
                 )
             else:
                 trace_list.append(
                     go.Scatter(
-                        x=trajectory.data['time'],
+                        x=trajectory.data["time"],
                         y=trajectory.data[species],
-                        mode='lines',
+                        mode="lines",
                         name=species,
                         line=line_dict,
                         legendgroup=species,
-                        showlegend=False
+                        showlegend=False,
                     )
                 )
 
     return trace_list
 
+
 class Trajectory(UserDict, Jsonify):
-    """ Trajectory Dict created by a gillespy2 solver containing single trajectory, extends the UserDict object.
+    """Trajectory Dict created by a gillespy2 solver containing single trajectory, extends the UserDict object.
 
     :param data: A dictionary of trajectory values created by a solver
     :type data: UserDict
@@ -124,13 +176,14 @@ class Trajectory(UserDict, Jsonify):
         self.solver_name = solver_name
         self.rc = rc
 
-        status_list = {0: 'Success', 33: 'Timed Out'}
+        status_list = {0: "Success", 33: "Timed Out"}
         self.status = status_list[rc]
 
     def __getitem__(self, key):
         if type(key) is int:
-            warnings.warn("Trajectory is of type dictionary. Use trajectory['species'] instead of "
-                          "trajectory[0]['species'] ")
+            warnings.warn(
+                "Trajectory is of type dictionary. Use trajectory['species'] instead of " "trajectory[0]['species'] "
+            )
             return self
         if key in self.data:
             return self.data[key]
@@ -151,28 +204,28 @@ class Results(UserList, Jsonify):
         self.data = data
 
     def __getattribute__(self, key):
-        if key == 'model' or key == 'solver_name' or key == 'rc' or key == 'status':
+        if key == "model" or key == "solver_name" or key == "rc" or key == "status":
             if len(self.data) > 1:
                 warnings.warn("Results is of type list. Use results[i]['model'] instead of results['model'] ")
-            return getattr(Results.__getattribute__(self, key='data')[0], key)
-        else: 
+            return getattr(Results.__getattribute__(self, key="data")[0], key)
+        else:
             return UserList.__getattribute__(self, key)
 
     def __getitem__(self, key):
-        if key == 'data':
+        if key == "data":
             return UserList.__getitem__(self, key)
-        if type(key) is str and key != 'data':
+        if type(key) is str and key != "data":
             if len(self.data) > 1:
                 warnings.warn("Results is of type list. Use results[i]['model'] instead of results['model'] ")
             return self.data[0][key]
         else:
-            return(UserList.__getitem__(self,key))
-        raise KeyError(key)
+            return UserList.__getitem__(self, key)
+
+        # raise KeyError(key)
 
     def __add__(self, other):
         combined_data = Results(data=(self.data + other.data))
         consistent_solver = combined_data._validate_solver()
-        consistent_model = combined_data._validate_model()
 
         if consistent_solver is False:
             warnings.warn("Results objects contain Trajectory objects from multiple solvers.")
@@ -180,7 +233,7 @@ class Results(UserList, Jsonify):
         consistent_model = combined_data._validate_model()
 
         if consistent_model is False:
-            raise ValidationError('Results objects contain Trajectory objects from multiple models.')
+            raise ValidationError("Results objects contain Trajectory objects from multiple models.")
 
         combined_data = self.data + other.data
         return Results(data=combined_data)
@@ -215,30 +268,31 @@ class Results(UserList, Jsonify):
 
     def _validate_title(self, show_title):
         if not show_title:
-            title = ''
+            title = ""
             return title
         if self._validate_model():
             title_model = self.data[0].model.name
         else:
-            title_model = 'Multiple Models'
+            title_model = "Multiple Models"
         if self._validate_solver():
             title_solver = self.data[0].solver_name
         else:
-            title_solver = 'Multiple Solvers'
-        title = (title_model + " - " + title_solver)
+            title_solver = "Multiple Solvers"
+        title = title_model + " - " + title_solver
         return title
 
     def to_array(self):
         import numpy as np
+
         results = []
-        size1 = len(self.data[0]['time'])
+        size1 = len(self.data[0]["time"])
         size2 = len(self.data[0])
 
-        for trajectory in range(0,len(self.data)):
-            newArray = np.zeros((size1, size2))
+        for trajectory in range(0, len(self.data)):
+            new_array = np.zeros((size1, size2))
             for i, key in enumerate(self.data[trajectory]):
-                newArray[:, i] = self.data[trajectory][key]
-            results.append(newArray)
+                new_array[:, i] = self.data[trajectory][key]
+            results.append(new_array)
         return results
 
     @classmethod
@@ -256,8 +310,9 @@ class Results(UserList, Jsonify):
         """
         if solver.rc == 33:
             from gillespy2.core import log
-            log.warning('GillesPy2 simulation exceeded timeout.')
-        if hasattr(solver.result[0], 'shape'):
+
+            log.warning("GillesPy2 simulation exceeded timeout.")
+        if hasattr(solver.result[0], "shape"):
             return solver.result
         if len(solver.result) > 0:
             results_list = []
@@ -266,7 +321,7 @@ class Results(UserList, Jsonify):
                 results_list.append(temp)
 
             results = Results(results_list)
-            if "type" in live_output_options.keys() and live_output_options['type'] == "graph":
+            if "type" in live_output_options.keys() and live_output_options["type"] == "graph":
                 results.plot()
             return results
         else:
@@ -297,29 +352,42 @@ class Results(UserList, Jsonify):
         else:
             identifier = nametag
         if path is None:
-            directory = os.path.join(".", str(identifier)+str(stamp))
+            directory = os.path.join(".", str(identifier) + str(stamp))
         else:
-            directory = os.path.join(path, str(identifier)+str(stamp))
+            directory = os.path.join(path, str(identifier) + str(stamp))
         # multiple trajectories
         if isinstance(self.data, list):
             os.mkdir(directory)
             for i, trajectory in enumerate(self.data):  # write each CSV file
-                filename = os.path.join(directory, str(identifier)+str(i)+".csv")
+                filename = os.path.join(directory, str(identifier) + str(i) + ".csv")
                 field_names = []
                 for species in trajectory:  # build the header
                     field_names.append(species)
-                with open(filename, 'w', newline='') as csv_file:
+                with open(filename, "w", newline="") as csv_file:
                     csv_writer = csv.writer(csv_file)
                     csv_writer.writerow(field_names)  # write the header
-                    for n,time in enumerate(trajectory['time']):  # write all lines of the CSV file
-                        this_line=[]
+                    for n, time in enumerate(trajectory["time"]):  # write all lines of the CSV file
+                        this_line = []
                         for species in trajectory:  # build one line of the CSV file
                             this_line.append(trajectory[species][n])
                         csv_writer.writerow(this_line)  # write one line of the CSV file
 
-    def plot(self, index=None, xaxis_label="Time", xscale='linear', yscale='linear', yaxis_label="Value",
-             style="default", title=None, show_title=False, show_legend=True, multiple_graphs=False,
-             included_species_list=[], save_png=False, figsize=(18, 10)):
+    def plot(
+        self,
+        index=None,
+        xaxis_label="Time",
+        xscale="linear",
+        yscale="linear",
+        yaxis_label="Value",
+        style="default",
+        title=None,
+        show_title=False,
+        show_legend=True,
+        multiple_graphs=False,
+        included_species_list=None,
+        save_png=False,
+        figsize=(18, 10),
+    ):
         """
         Plots the Results using matplotlib.
 
@@ -350,14 +418,18 @@ class Results(UserList, Jsonify):
         :type figsize: tuple of ints (x,y)
         """
 
+        if included_species_list is None:
+            included_species_list = []
+
         import matplotlib.pyplot as plt
         from collections import Iterable
+
         trajectory_list = []
         if isinstance(index, Iterable):
             for i in index:
                 trajectory_list.append(self.data[i])
         elif isinstance(index, int):
-                trajectory_list.append(self.data[index])
+            trajectory_list.append(self.data[index])
         else:
             trajectory_list = self.data
 
@@ -365,24 +437,36 @@ class Results(UserList, Jsonify):
             title = self._validate_title(show_title)
 
         if len(trajectory_list) < 2:
-                multiple_graphs = False
+            multiple_graphs = False
 
         if multiple_graphs:
             for i, trajectory in enumerate(trajectory_list):
                 result = Results(data=[trajectory])
                 if isinstance(save_png, str):
-                    result.plot(xaxis_label=xaxis_label, yaxis_label=yaxis_label, title=title + " " + str(i + 1),
-                                style=style, included_species_list=included_species_list, save_png=save_png + str(i + 1)
-                                , figsize=figsize)
+                    result.plot(
+                        xaxis_label=xaxis_label,
+                        yaxis_label=yaxis_label,
+                        title=title + " " + str(i + 1),
+                        style=style,
+                        included_species_list=included_species_list,
+                        save_png=save_png + str(i + 1),
+                        figsize=figsize,
+                    )
                 else:
-                    result.plot(xaxis_label=xaxis_label, yaxis_label=yaxis_label, title=title + " " + str(i + 1),
-                                style=style, included_species_list=included_species_list, save_png=save_png,
-                                figsize=figsize)
+                    result.plot(
+                        xaxis_label=xaxis_label,
+                        yaxis_label=yaxis_label,
+                        title=title + " " + str(i + 1),
+                        style=style,
+                        included_species_list=included_species_list,
+                        save_png=save_png,
+                        figsize=figsize,
+                    )
 
         else:
             try:
                 plt.style.use(style)
-            except:
+            except Exception:
                 warnings.warn("Invalid matplotlib style. Try using one of the following {}".format(plt.style.available))
                 plt.style.use("default")
 
@@ -401,7 +485,7 @@ class Results(UserList, Jsonify):
                     _plot_iterate(trajectory, included_species_list=included_species_list)
 
             if show_legend:
-                plt.legend(loc='best')
+                plt.legend(loc="best")
             plt.plot()
             if isinstance(save_png, str):
                 plt.savefig(save_png)
@@ -409,10 +493,20 @@ class Results(UserList, Jsonify):
             elif save_png:
                 plt.savefig(title)
 
-    def plotplotly(self, index=None, xaxis_label="Time", yaxis_label="Value", title=None,
-                   show_title=False, show_legend=True, multiple_graphs=False, included_species_list=[],
-                   return_plotly_figure=False,  **layout_args):
-        """ Plots the Results using plotly. Can only be viewed in a Jupyter Notebook.
+    def plotplotly(
+        self,
+        index=None,
+        xaxis_label="Time",
+        yaxis_label="Value",
+        title=None,
+        show_title=False,
+        show_legend=True,
+        multiple_graphs=False,
+        included_species_list=None,
+        return_plotly_figure=False,
+        **layout_args
+    ):
+        """Plots the Results using plotly. Can only be viewed in a Jupyter Notebook.
 
         :param index: If not none, the index of the Trajectory to be plotted.
         :type index: int
@@ -439,7 +533,7 @@ class Results(UserList, Jsonify):
             species.
         :type included_species_list: list
 
-        :param return_plotly_figure: Whether or not to return a figure dictionary of data(graph object traces) and
+        :param return_plotly_figure: Whether to return a figure dictionary of data(graph object traces) and
             layout which may be edited by the user
         :type return_plotly_figure: bool
 
@@ -447,20 +541,24 @@ class Results(UserList, Jsonify):
         :type **layout_args: dict
         """
 
+        if included_species_list is None:
+            included_species_list = []
+
         from plotly.offline import init_notebook_mode, iplot
         import plotly.graph_objs as go
 
         # Backwards compatibility with xaxis_label argument (which duplicates plotly's xaxis_title argument)
-        if layout_args.get('xaxis_title') is not None:
-            xaxis_label = layout_args.get('xaxis_title')
-            layout_args.pop('xaxis_title')
-        if layout_args.get('yaxis_title') is not None:
-            yaxis_label = layout_args.get('yaxis_title')
-            layout_args.pop('yaxis_title')
+        if layout_args.get("xaxis_title") is not None:
+            xaxis_label = layout_args.get("xaxis_title")
+            layout_args.pop("xaxis_title")
+        if layout_args.get("yaxis_title") is not None:
+            yaxis_label = layout_args.get("yaxis_title")
+            layout_args.pop("yaxis_title")
 
         init_notebook_mode(connected=True)
 
         from collections import Iterable
+
         trajectory_list = []
         if isinstance(index, Iterable):
             for i in index:
@@ -484,46 +582,50 @@ class Results(UserList, Jsonify):
 
             from plotly import subplots
 
-            fig = subplots.make_subplots(print_grid=False, rows=int(number_of_trajectories/2) +
-                                                             int(number_of_trajectories % 2), cols=2)
+            fig = subplots.make_subplots(
+                print_grid=False, rows=int(number_of_trajectories / 2) + int(number_of_trajectories % 2), cols=2
+            )
 
             for i, trajectory in enumerate(trajectory_list):
                 if i > 0:
-                    trace_list = _plotplotly_iterate(trajectory, trace_list=[], included_species_list=
-                    included_species_list, show_labels=False)
+                    trace_list = _plotplotly_iterate(
+                        trajectory, trace_list=[], included_species_list=included_species_list, show_labels=False
+                    )
                 else:
-                    trace_list = _plotplotly_iterate(trajectory, trace_list=[], included_species_list=
-                    included_species_list)
+                    trace_list = _plotplotly_iterate(
+                        trajectory, trace_list=[], included_species_list=included_species_list
+                    )
 
                 for k in range(0, len(trace_list)):
                     if i % 2 == 0:
-                        fig.append_trace(trace_list[k], int(i/2) + 1, 1)
+                        fig.append_trace(trace_list[k], int(i / 2) + 1, 1)
                     else:
-                        fig.append_trace(trace_list[k], int(i/2) + 1, 2)
+                        fig.append_trace(trace_list[k], int(i / 2) + 1, 2)
 
-                fig['layout'].update(autosize=True, height=400*len(trajectory_list), showlegend=show_legend, title=title
-                                     )
+                fig["layout"].update(
+                    autosize=True, height=400 * len(trajectory_list), showlegend=show_legend, title=title
+                )
         else:
             trace_list = []
             for i, trajectory in enumerate(trajectory_list):
                 if i > 0:
-                    trace_list = _plotplotly_iterate(trajectory, trace_list=trace_list, included_species_list=
-                    included_species_list, show_labels=False)
+                    trace_list = _plotplotly_iterate(
+                        trajectory,
+                        trace_list=trace_list,
+                        included_species_list=included_species_list,
+                        show_labels=False,
+                    )
                 else:
-                    trace_list = _plotplotly_iterate(trajectory, trace_list=trace_list, included_species_list=
-                    included_species_list)
-
+                    trace_list = _plotplotly_iterate(
+                        trajectory, trace_list=trace_list, included_species_list=included_species_list
+                    )
 
             layout = go.Layout(
-                showlegend=show_legend,
-                title=title,
-                xaxis_title=xaxis_label,
-                yaxis_title=yaxis_label,
-                **layout_args
+                showlegend=show_legend, title=title, xaxis_title=xaxis_label, yaxis_title=yaxis_label, **layout_args
             )
 
-            fig['data'] = trace_list
-            fig['layout'] = layout
+            fig["data"] = trace_list
+            fig["layout"] = layout
 
         if return_plotly_figure:
             return fig
@@ -540,24 +642,27 @@ class Results(UserList, Jsonify):
         trajectory_list = self.data
         number_of_trajectories = len(trajectory_list)
 
-        output_trajectory = Trajectory(data={}, model=trajectory_list[0].model, solver_name=
-        trajectory_list[0].solver_name)
+        output_trajectory = Trajectory(
+            data={}, model=trajectory_list[0].model, solver_name=trajectory_list[0].solver_name
+        )
 
         for species in trajectory_list[0]:  # Initialize the output to be the same size as the inputs
-            output_trajectory[species] = [0]*len(trajectory_list[0][species])
+            output_trajectory[species] = [0] * len(trajectory_list[0][species])
 
-        output_trajectory['time'] = trajectory_list[0]['time']
+        output_trajectory["time"] = trajectory_list[0]["time"]
 
-        for i in range(0, number_of_trajectories):  # Add every value of every Trajectory Dict into one output Trajectory
+        for i in range(
+            0, number_of_trajectories
+        ):  # Add every value of every Trajectory Dict into one output Trajectory
             trajectory_dict = trajectory_list[i]
             for species in trajectory_dict:
-                if species == 'time':
+                if species == "time":
                     continue
                 for k in range(0, len(output_trajectory[species])):
                     output_trajectory[species][k] += trajectory_dict[species][k]
 
-        for species in output_trajectory:   # Divide for mean of every value in output Trajectory
-            if species == 'time':
+        for species in output_trajectory:  # Divide for mean of every value in output Trajectory
+            if species == "time":
                 continue
             for i in range(0, len(output_trajectory[species])):
                 output_trajectory[species][i] /= number_of_trajectories
@@ -572,8 +677,8 @@ class Results(UserList, Jsonify):
         trajectories' outputs.
 
         :param ddof: Delta Degrees of Freedom. The divisor used in calculations is N - ddof, where N represents
-            the number of trajectories. Sample standard deviation uses ddof of 1. Defaults to population standard deviation
-            where ddof is 0.
+            the number of trajectories. Sample standard deviation uses ddof of 1. Defaults to population standard
+            deviation where ddof is 0.
         :type ddof: int
 
         :returns: the Results object
@@ -590,37 +695,47 @@ class Results(UserList, Jsonify):
 
         average_list = self.average_ensemble().data[0]
 
-        output_trajectory = Trajectory(data={}, model=trajectory_list[0].model, solver_name=
-        trajectory_list[0].solver_name)
+        output_trajectory = Trajectory(
+            data={}, model=trajectory_list[0].model, solver_name=trajectory_list[0].solver_name
+        )
 
         for species in trajectory_list[0]:  # Initialize the output to be the same size as the inputs
-            output_trajectory[species] = [0]*len(trajectory_list[0][species])
+            output_trajectory[species] = [0] * len(trajectory_list[0][species])
 
-        output_trajectory['time'] = trajectory_list[0]['time']
+        output_trajectory["time"] = trajectory_list[0]["time"]
 
         for i in range(0, number_of_trajectories):
             trajectory_dict = trajectory_list[i]
             for species in trajectory_dict:
-                if species == 'time':
+                if species == "time":
                     continue
-                for k in range(0, len(output_trajectory['time'])):
-                    output_trajectory[species][k] += (trajectory_dict[species][k] - average_list[species][k])\
-                                          * (trajectory_dict[species][k] - average_list[species][k])
+                for k in range(0, len(output_trajectory["time"])):
+                    output_trajectory[species][k] += (trajectory_dict[species][k] - average_list[species][k]) * (
+                        trajectory_dict[species][k] - average_list[species][k]
+                    )
 
-        for species in output_trajectory:   # Divide for mean of every value in output Trajectory
-            if species == 'time':
+        for species in output_trajectory:  # Divide for mean of every value in output Trajectory
+            if species == "time":
                 continue
             for i in range(0, len(output_trajectory[species])):
-                output_trajectory[species][i] /= (number_of_trajectories - ddof)
+                output_trajectory[species][i] /= number_of_trajectories - ddof
                 output_trajectory[species][i] = sqrt(output_trajectory[species][i])
 
         output_results = Results(data=[output_trajectory])  # package output_trajectory in a Results object
         return output_results
 
-
-    def plotplotly_mean_stdev(self, xaxis_label="Time", yaxis_label="Value", title=None,
-                                 show_title=False, show_legend=True, included_species_list=[],
-                                 return_plotly_figure=False, ddof=0, **layout_args):
+    def plotplotly_mean_stdev(
+        self,
+        xaxis_label="Time",
+        yaxis_label="Value",
+        title=None,
+        show_title=False,
+        show_legend=True,
+        included_species_list=None,
+        return_plotly_figure=False,
+        ddof=0,
+        **layout_args
+    ):
         """
         Plot a plotly graph depicting the mean and standard deviation of a results object
 
@@ -648,8 +763,8 @@ class Results(UserList, Jsonify):
         :type return_plotly_figure: bool
 
         :param ddof: Delta Degrees of Freedom. The divisor used in calculations is N - ddof, where N represents
-            the number of trajectories. Sample standard deviation uses ddof of 1. Defaults to population standard deviation
-            where ddof is 0.
+            the number of trajectories. Sample standard deviation uses ddof of 1. Defaults to population standard
+            deviation where ddof is 0.
         :type ddof: int
 
         :param **layout_args: Optional additional arguments to be passed to plotlys layout constructor.
@@ -657,12 +772,14 @@ class Results(UserList, Jsonify):
         """
 
         # Backwards compatibility with xaxis_label argument (which duplicates plotly's xaxis_title argument)
-        if layout_args.get('xaxis_title') is not None:
-            xaxis_label = layout_args.get('xaxis_title')
-            layout_args.pop('xaxis_title')
-        if layout_args.get('yaxis_title') is not None:
-            yaxis_label = layout_args.get('yaxis_title')
-            layout_args.pop('yaxis_title')
+        if included_species_list is None:
+            included_species_list = []
+        if layout_args.get("xaxis_title") is not None:
+            xaxis_label = layout_args.get("xaxis_title")
+            layout_args.pop("xaxis_title")
+        if layout_args.get("yaxis_title") is not None:
+            yaxis_label = layout_args.get("yaxis_title")
+            layout_args.pop("yaxis_title")
 
         average_trajectory = self.average_ensemble().data[0]
         stddev_trajectory = self.stddev_ensemble(ddof=ddof).data[0]
@@ -672,14 +789,14 @@ class Results(UserList, Jsonify):
         init_notebook_mode(connected=True)
 
         if not show_title:
-            title = 'Mean and Standard Deviation'
+            title = "Mean and Standard Deviation"
         else:
             if title is None:
-                title = (self._validate_title(show_title) + " - Mean and Standard Deviation")
+                title = self._validate_title(show_title) + " - Mean and Standard Deviation"
 
         trace_list = []
         for species in average_trajectory:
-            if species != 'time':
+            if species != "time":
 
                 if species not in included_species_list and included_species_list:
                     continue
@@ -693,23 +810,23 @@ class Results(UserList, Jsonify):
                 # Append upper_bound list to trace_list
                 trace_list.append(
                     go.Scatter(
-                        name=species + ' Upper Bound',
-                        x=average_trajectory['time'],
+                        name=species + " Upper Bound",
+                        x=average_trajectory["time"],
                         y=upper_bound,
-                        mode='lines',
+                        mode="lines",
                         marker=dict(color="#444"),
-                        line=dict(width=1, dash='dot'),
+                        line=dict(width=1, dash="dot"),
                         legendgroup=str(average_trajectory[species]),
-                        showlegend=False
+                        showlegend=False,
                     )
                 )
                 trace_list.append(
                     go.Scatter(
-                        x=average_trajectory['time'],
+                        x=average_trajectory["time"],
                         y=average_trajectory[species],
                         name=species,
-                        fillcolor='rgba(68, 68, 68, 0.2)',
-                        fill='tonexty',
+                        fillcolor="rgba(68, 68, 68, 0.2)",
+                        fill="tonexty",
                         legendgroup=str(average_trajectory[species]),
                     )
                 )
@@ -717,16 +834,16 @@ class Results(UserList, Jsonify):
                 # Append lower_bound list to trace_list
                 trace_list.append(
                     go.Scatter(
-                        name=species + ' Lower Bound',
-                        x=average_trajectory['time'],
-                        y= lower_bound,
-                        mode='lines',
+                        name=species + " Lower Bound",
+                        x=average_trajectory["time"],
+                        y=lower_bound,
+                        mode="lines",
                         marker=dict(color="#444"),
-                        line=dict(width=1, dash='dot'),
-                        fillcolor='rgba(68, 68, 68, 0.2)',
-                        fill='tonexty',
+                        line=dict(width=1, dash="dot"),
+                        fillcolor="rgba(68, 68, 68, 0.2)",
+                        fill="tonexty",
                         legendgroup=str(average_trajectory[species]),
-                        showlegend=False
+                        showlegend=False,
                     )
                 )
 
@@ -735,7 +852,7 @@ class Results(UserList, Jsonify):
             title=title,
             xaxis_title=xaxis_label,
             yaxis_title=yaxis_label,
-            legend={'traceorder': 'normal'},
+            legend={"traceorder": "normal"},
             **layout_args
         )
         fig = dict(data=trace_list, layout=layout)
@@ -744,11 +861,22 @@ class Results(UserList, Jsonify):
             return fig
         else:
             iplot(fig)
-    
 
-    def plot_mean_stdev(self, xscale='linear', yscale='linear', xaxis_label="Time", yaxis_label="Value"
-                           , title=None, show_title=False, style="default", show_legend=True, included_species_list=[],
-                           ddof=0, save_png=False, figsize=(18, 10)):
+    def plot_mean_stdev(
+        self,
+        xscale="linear",
+        yscale="linear",
+        xaxis_label="Time",
+        yaxis_label="Value",
+        title=None,
+        show_title=False,
+        style="default",
+        show_legend=True,
+        included_species_list=None,
+        ddof=0,
+        save_png=False,
+        figsize=(18, 10),
+    ):
         """
         Plot a matplotlib graph depicting mean and standard deviation of a results object.
 
@@ -775,8 +903,8 @@ class Results(UserList, Jsonify):
         :type included_species_list: list
 
         :param ddof: Delta Degrees of Freedom. The divisor used in calculations is N - ddof, where N represents
-            the number of trajectories. Sample standard deviation uses ddof of 1. Defaults to population standard deviation
-            where ddof is 0.
+            the number of trajectories. Sample standard deviation uses ddof of 1. Defaults to population standard
+            deviation where ddof is 0.
         :type ddof: int
 
         :type save_png: bool or str
@@ -785,6 +913,9 @@ class Results(UserList, Jsonify):
         :type figsize: tuple of ints (x,y)
         """
 
+        if included_species_list is None:
+            included_species_list = []
+
         average_result = self.average_ensemble().data[0]
         stddev_trajectory = self.stddev_ensemble(ddof=ddof).data[0]
 
@@ -792,31 +923,31 @@ class Results(UserList, Jsonify):
 
         try:
             plt.style.use(style)
-        except:
+        except Exception:
             warnings.warn("Invalid matplotlib style. Try using one of the following {}".format(plt.style.available))
             plt.style.use("default")
 
         plt.figure(figsize=figsize)
 
         for species in average_result:
-            if species == 'time':
+            if species == "time":
                 continue
 
             if species not in included_species_list and included_species_list:
                 continue
 
-            lowerBound = [a-b for a, b in zip(average_result[species], stddev_trajectory[species])]
-            upperBound = [a+b for a, b in zip(average_result[species], stddev_trajectory[species])]
+            lower_bound = [a - b for a, b in zip(average_result[species], stddev_trajectory[species])]
+            upper_bound = [a + b for a, b in zip(average_result[species], stddev_trajectory[species])]
 
-            plt.fill_between(average_result['time'], lowerBound, upperBound, color='whitesmoke')
-            plt.plot(average_result['time'], lowerBound, upperBound, color='grey', linestyle='dashed')
-            plt.plot(average_result['time'], average_result[species], label=species)
+            plt.fill_between(average_result["time"], lower_bound, upper_bound, color="whitesmoke")
+            plt.plot(average_result["time"], lower_bound, upper_bound, color="grey", linestyle="dashed")
+            plt.plot(average_result["time"], average_result[species], label=species)
 
         if not show_title:
-            title = 'Mean and Standard Deviation'
+            title = "Mean and Standard Deviation"
         else:
             if title is None:
-                title = (self._validate_title(show_title) + " - Mean and Standard Deviation")
+                title = self._validate_title(show_title) + " - Mean and Standard Deviation"
 
         plt.title(title, fontsize=18)
         plt.xlabel(xaxis_label)
@@ -826,7 +957,7 @@ class Results(UserList, Jsonify):
 
         plt.plot([0], [11])
         if show_legend:
-            plt.legend(loc='best')
+            plt.legend(loc="best")
 
         if isinstance(save_png, str):
             plt.savefig(save_png)
@@ -834,6 +965,5 @@ class Results(UserList, Jsonify):
         elif save_png:
             plt.savefig(title)
 
-
-    plotplotly_std_dev_range =  plotplotly_mean_stdev  # for backwards compatability, we need to keep the old name around
-    plot_std_dev_range = plot_mean_stdev   # for backwards compatability, we need to keep the old name around
+    plotplotly_std_dev_range = plotplotly_mean_stdev  # for backwards compatability, we need to keep the old name around
+    plot_std_dev_range = plot_mean_stdev  # for backwards compatability, we need to keep the old name around

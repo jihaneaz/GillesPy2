@@ -24,13 +24,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # =============================================================================
 
 
-__version__      = '1.6.8'
+__version__ = "1.6.8"
 
-__title__        = 'GillesPy2'
-__description__  = 'Python interface for Gillespie-style biochemical simulations'
-__url__          = 'https://github.com/StochSS/GillesPy2'
-__download_url__ = 'https://pypi.org/project/gillespy2/#files'
-__author__       = 'See AUTHORS'
-__email__        = 'bdrawert@unca.edu'
-__license__      = 'GPL'
-__copyright__    = 'Copyright (C) 2017-2021'
+__title__ = "GillesPy2"
+__description__ = "Python interface for Gillespie-style biochemical simulations"
+__url__ = "https://github.com/StochSS/GillesPy2"
+__download_url__ = "https://pypi.org/project/gillespy2/#files"
+__author__ = "See AUTHORS"
+__email__ = "bdrawert@unca.edu"
+__license__ = "GPL"
+__copyright__ = "Copyright (C) 2017-2021"

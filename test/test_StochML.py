@@ -25,15 +25,13 @@ from gillespy2 import NumPySSASolver
 
 
 class TestStochML(unittest.TestCase):
-
     def test_StochML_from_and_to_model(self):
         model = Example()
         stochml = StochMLDocument.from_model(model)
-        stochml_model = stochml.to_model('model')
+        stochml_model = stochml.to_model("model")
         stochml_model.run(solver=ODESolver)
         stochml_model.run(solver=NumPySSASolver)
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

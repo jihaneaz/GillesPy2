@@ -7,7 +7,7 @@
 {'type':'umlshape', 'id':'FunctionDefinition', 'x':5, 'y':277, 'width':190, 'height':119, 'attrs': 'function|name', 'meths': 'sanitized_function|__init__'}
 {'type':'umlshape', 'id':'AssignmentRule', 'x':635, 'y':456, 'width':150, 'height':149, 'attrs': 'variable|formula|name', 'meths': 'sanitized_formula|__str__|__init__'}
 {'type':'umlshape', 'id':'RateRule', 'x':351, 'y':237, 'width':129, 'height':149, 'attrs': 'variable|formula|name', 'meths': 'sanitized_formula|__str__|__init__'}
-{'type':'umlshape', 'id':'Reaction', 'x':489, 'y':672, 'width':259, 'height':227, 'attrs': 'name|ode_propensity_function|marate|products|reactants|propensity_function|type|massaction|annotation', 'meths': 'Annotate|__str__|sanitized_propensity_function|__customPropParser|setType|verify|addReactant|addProduct|__init__|__create_mass_action'}
+{'type':'umlshape', 'id':'Reaction', 'x':489, 'y':672, 'width':259, 'height':227, 'attrs': 'name|ode_propensity_function|marate|products|reactants|propensity_function|type|massaction|annotation', 'meths': 'annotate|__str__|sanitized_propensity_function|__customPropParser|setType|verify|add_reactant|add_product|__init__|__create_mass_action'}
 {'type':'umlshape', 'id':'ExpressionParser', 'x':535, 'y':281, 'width':170, 'height':79, 'attrs': '', 'meths': 'visit_Name|visit_BinOp'}
 {'type':'umlshape', 'id':'StochMLDocument', 'x':868, 'y':260, 'width':164, 'height':179, 'attrs': 'document|annotation', 'meths': '__reaction_to_element|__parameter_to_element|to_string|to_model|__species_to_element|__init__'}
 {'type':'umlshape', 'id':'ast.NodeVisitor', 'x':10, 'y':732, 'width':160, 'height':29, 'attrs': '', 'meths': ''}

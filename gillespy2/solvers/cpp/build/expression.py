@@ -1,5 +1,5 @@
 import ast
-from typing import Union, Optional
+from typing import Optional, Union
 
 
 class Expression:

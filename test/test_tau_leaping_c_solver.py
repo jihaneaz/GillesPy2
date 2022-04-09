@@ -22,6 +22,7 @@ from gillespy2.core.gillespyError import DirectoryError, SimulationError
 from example_models import Example, ExampleNoTspan
 from gillespy2.solvers.cpp.tau_leaping_c_solver import TauLeapingCSolver
 
+
 class TestTauLeapingCSolver(unittest.TestCase):
     def test_create(self):
         model = Example()
@@ -56,5 +57,5 @@ class TestTauLeapingCSolver(unittest.TestCase):
             results = TauLeapingCSolver.run(model=model, increment=0.2)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

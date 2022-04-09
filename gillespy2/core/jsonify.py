@@ -16,16 +16,17 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-import re
 import copy
+import hashlib
 import json
 import pydoc
-import hashlib
-
+import re
 from json import JSONEncoder
 
 import numpy
+
 import gillespy2
+
 
 class Jsonify:
     """
@@ -147,7 +148,7 @@ class Jsonify:
             prior to being hashed.
         :type ignore_whitespace: bool
 
-        :param hash_private_vals: If set to True all private and non-private variables will 
+        :param hash_private_vals: If set to True all private and non-private variables will
             be included in the hash.
         :type hash_private_vals: bool
 
@@ -175,6 +176,7 @@ class Jsonify:
         """
         return self.get_json_hash() == o.get_json_hash()
 
+
 class ComplexJsonCoder(JSONEncoder):
     """
     This class delegates the encoding and decoding of objects to one or more implementees.
@@ -193,11 +195,7 @@ class ComplexJsonCoder(JSONEncoder):
         self._translation_table = translation_table
         self._encode_private = encode_private
 
-        self._delegation_table = {
-            numpy.ndarray: NdArrayCoder,
-            set: SetCoder,
-            type: TypeCoder
-        }
+        self._delegation_table = {numpy.ndarray: NdArrayCoder, set: SetCoder, type: TypeCoder}
 
     def default(self, o: object):
         """
@@ -237,7 +235,8 @@ class ComplexJsonCoder(JSONEncoder):
 
         return model
 
-    def decode(self, json_dict: dict):
+    @staticmethod
+    def decode(json_dict: dict):
         """
         Decode the JSON dictionary into a valid Python object.
 
@@ -264,6 +263,7 @@ class ComplexJsonCoder(JSONEncoder):
 
         return json_type.from_json(json_dict)
 
+
 class TranslationTable(Jsonify):
     """
     This class contains functions to enable arbitrary object trees to be "translated" to anonymous
@@ -282,10 +282,10 @@ class TranslationTable(Jsonify):
         """
         Recursively anonymise all named properties on the object.
 
-        :param obj: The object to anonymize.
+        :param obj: The object to anonymise.
         :type obj: object
 
-        :returns: An anonymized instance of self.
+        :returns: An anonymised instance of self.
         """
 
         return self.recursive_translate(obj, self.to_anon)
@@ -294,7 +294,7 @@ class TranslationTable(Jsonify):
         """
         Recursively identify all anonymous properties on the object.
 
-        :param obj: The object that will be converted to named.
+        :param obj: The object that will be converted to named instance of self.
         :type obj: object
 
         :returns: A named instance of self.
@@ -313,6 +313,8 @@ class TranslationTable(Jsonify):
         :param translation_table: The mapping to translate by.
         :type translation_table: TranslationTable
         """
+
+        saved_table = None
 
         # If a translation table exists on the object, remove and save it.
         if "_translation_table" in obj.__dict__:
@@ -341,13 +343,15 @@ class TranslationTable(Jsonify):
             # Convert the dictionary into a list of tuples.
             # This makes it easier to modify key names.
             obj = list((k, v) for k, v in obj.items())
-            new_pairs = [ ]
+            new_pairs = []
 
             for pair in obj:
-                new_pairs.append((
-                    self._recursive_translate(pair[0], translation_table),
-                    self._recursive_translate(pair[1], translation_table)
-                ))
+                new_pairs.append(
+                    (
+                        self._recursive_translate(pair[0], translation_table),
+                        self._recursive_translate(pair[1], translation_table),
+                    )
+                )
 
             obj = dict((x[0], x[1]) for x in new_pairs)
 
@@ -364,43 +368,37 @@ class TranslationTable(Jsonify):
 
         return obj
 
+
 class NdArrayCoder(Jsonify):
-    """ This JSON coder enables support for  the `numpy.ndarray` type. """
+    """This JSON coder enables support for  the `numpy.ndarray` type."""
 
     @staticmethod
     def to_dict(obj):
-        return {
-            "data": obj.tolist(),
-            "_type": f"{NdArrayCoder.__module__}.{NdArrayCoder.__name__}"
-        }
+        return {"data": obj.tolist(), "_type": f"{NdArrayCoder.__module__}.{NdArrayCoder.__name__}"}
 
     @staticmethod
     def from_json(obj):
         return numpy.array(obj["data"])
 
+
 class SetCoder(Jsonify):
-    """ This JSON coder enables support for the `set` type. """
+    """This JSON coder enables support for the `set` type."""
 
     @staticmethod
     def to_dict(obj):
-        return {
-            "data": list(obj),
-            "_type": f"{SetCoder.__module__}.{SetCoder.__name__}"
-        }
+        return {"data": list(obj), "_type": f"{SetCoder.__module__}.{SetCoder.__name__}"}
 
     @staticmethod
     def from_json(obj):
         return set(obj["data"])
 
+
 class TypeCoder(Jsonify):
-    """ This JSON coder enables support for the 'type' type. """
+    """This JSON coder enables support for the 'type' type."""
 
     @staticmethod
     def to_dict(obj):
-        return {
-            "data": type(obj),
-            "_type": f"{TypeCoder.__module__}.{TypeCoder.__name__}"
-        }
+        return {"data": type(obj), "_type": f"{TypeCoder.__module__}.{TypeCoder.__name__}"}
 
     @staticmethod
     def from_json(obj):

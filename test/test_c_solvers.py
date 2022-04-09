@@ -35,6 +35,7 @@ class ExpressionTestCase:
     Each test expression consists of a dict of argument names, an expression, and a list of
     values to be passed as arguments to the given expression.
     """
+
     def __init__(self, args: "dict[str, str]", expression: "str", values: "list[list[float]]"):
         self.args = args
         self.expression = expression
@@ -60,7 +61,7 @@ class TestCSolvers(unittest.TestCase):
         SSACSolver.target: SSACSolver(model=test_model),
         ODECSolver.target: ODECSolver(model=test_model),
         TauLeapingCSolver.target: TauLeapingCSolver(model=test_model),
-        TauHybridCSolver.target: TauHybridCSolver(model=test_model)
+        TauHybridCSolver.target: TauHybridCSolver(model=test_model),
     }
     solvers_variable = {
         SSACSolver.target: SSACSolver(model=test_model, variable=True),
@@ -71,53 +72,117 @@ class TestCSolvers(unittest.TestCase):
     expressions = [
         # Each test expression consists of a dict of args, an expression string, and a list of arg values.
         # Asserts that single operations work.
-        ExpressionTestCase({"x": "x"}, "x*2", [
-            [0.0], [1.0], [-1.0], [9.999], [-9.999],
-        ]),
+        ExpressionTestCase(
+            {"x": "x"},
+            "x*2",
+            [
+                [0.0],
+                [1.0],
+                [-1.0],
+                [9.999],
+                [-9.999],
+            ],
+        ),
         # Asserts that order of operations is being evaluated properly.
-        ExpressionTestCase({"x": "x"}, "x*2 + x/2 - (x*3)^2 + x/3^2", [
-            [0.0], [1.0], [-1.0], [3.333], [-3.333], [9.8765], [-9.8765]
-        ]),
+        ExpressionTestCase(
+            {"x": "x"}, "x*2 + x/2 - (x*3)^2 + x/3^2", [[0.0], [1.0], [-1.0], [3.333], [-3.333], [9.8765], [-9.8765]]
+        ),
         # Asserts that order of operations is evaluated properly with multiple variables.
-        ExpressionTestCase({"x": "x", "y": "y"}, "(x-1)*y^2+x", [
-            [1.0, 2.4], [5.1, 0.0], [5.1, 1.0], [5.1, -1.0], [9.8765, -1.0], [-1.0, 9.8765],
-        ]),
+        ExpressionTestCase(
+            {"x": "x", "y": "y"},
+            "(x-1)*y^2+x",
+            [
+                [1.0, 2.4],
+                [5.1, 0.0],
+                [5.1, 1.0],
+                [5.1, -1.0],
+                [9.8765, -1.0],
+                [-1.0, 9.8765],
+            ],
+        ),
         # Asserts complex order of operations with a large number of variables.
-        ExpressionTestCase({"x": "x", "y": "y", "z": "z"}, "(x^2/y^2/z^2)/x^2/y^2/z^2**1/x**1/y**1/z", [
-            [5.1, 0.1, 2.0], [0.1, 5.1, 2.0], [2.0, 0.1, 5.1], [2.0, 5.1, 0.1],
-        ]),
+        ExpressionTestCase(
+            {"x": "x", "y": "y", "z": "z"},
+            "(x^2/y^2/z^2)/x^2/y^2/z^2**1/x**1/y**1/z",
+            [
+                [5.1, 0.1, 2.0],
+                [0.1, 5.1, 2.0],
+                [2.0, 0.1, 5.1],
+                [2.0, 5.1, 0.1],
+            ],
+        ),
         # Known, builtin math expression functions work.
-        ExpressionTestCase({"x": "x"}, "abs(x)", [
-            [100.0], [100], [-100.0], [-100], [0],
-        ]),
+        ExpressionTestCase(
+            {"x": "x"},
+            "abs(x)",
+            [
+                [100.0],
+                [100],
+                [-100.0],
+                [-100],
+                [0],
+            ],
+        ),
     ]
     comparisons = [
         # Asserts that single comparison expressions work.
-        ExpressionTestCase({"x": "x"}, "x > 0", [
-            [100], [0], [0.001], [-1],
-        ]),
-        ExpressionTestCase({"x": "x", "y": "y"}, "x > y", [
-            [100, 99], [99, 100], [-10, 10], [10, -10],
-            [0.001, 0.0], [0.0, 0.001], [-99.999, -99.998]
-        ]),
+        ExpressionTestCase(
+            {"x": "x"},
+            "x > 0",
+            [
+                [100],
+                [0],
+                [0.001],
+                [-1],
+            ],
+        ),
+        ExpressionTestCase(
+            {"x": "x", "y": "y"},
+            "x > y",
+            [[100, 99], [99, 100], [-10, 10], [10, -10], [0.001, 0.0], [0.0, 0.001], [-99.999, -99.998]],
+        ),
         # Asserts that single boolean operators work.
-        ExpressionTestCase({"x": "x", "y": "y"}, "x > 0 and y < x", [
-            [100, 99], [99, 100], [0, -100], [-0.001, -99.0], [0, 0.001], [-0.001, 0]
-        ]),
+        ExpressionTestCase(
+            {"x": "x", "y": "y"},
+            "x > 0 and y < x",
+            [[100, 99], [99, 100], [0, -100], [-0.001, -99.0], [0, 0.001], [-0.001, 0]],
+        ),
         # Asserts that nested boolean operators work.
-        ExpressionTestCase({"x": "x", "y": "y"}, "x > 0 and y < 10 and x > y", [
-            [100, 9], [0.01, 0.00], [100, 200], [0.01, 0.02],
-            [0, 0], [-0.01, -0.02], [-0.01, 0],
-        ]),
+        ExpressionTestCase(
+            {"x": "x", "y": "y"},
+            "x > 0 and y < 10 and x > y",
+            [
+                [100, 9],
+                [0.01, 0.00],
+                [100, 200],
+                [0.01, 0.02],
+                [0, 0],
+                [-0.01, -0.02],
+                [-0.01, 0],
+            ],
+        ),
         # Asserts that both && and || work.
-        ExpressionTestCase({"x": "x", "y": "y"}, "x > 0 and y < 10 or y > 100", [
-            [10, 9], [0.01, 9.99], [0, 10], [-1.0, -1.0],
-        ]),
+        ExpressionTestCase(
+            {"x": "x", "y": "y"},
+            "x > 0 and y < 10 or y > 100",
+            [
+                [10, 9],
+                [0.01, 9.99],
+                [0, 10],
+                [-1.0, -1.0],
+            ],
+        ),
         # Asserts that nested boolean operators properly respect order of operations.
-        ExpressionTestCase({"x": "x", "y": "y", "z": "z"}, "x^2>x and y<y^2 or z^2!=z^3 and y!=z", [
-            [1.0, 1.0, 1.0], [99.9, 99.9, 100.0],
-            [0.0, -1.0, 99.9], [-1.0, -1.0, 0.00],
-        ]),
+        ExpressionTestCase(
+            {"x": "x", "y": "y", "z": "z"},
+            "x^2>x and y<y^2 or z^2!=z^3 and y!=z",
+            [
+                [1.0, 1.0, 1.0],
+                [99.9, 99.9, 100.0],
+                [0.0, -1.0, 99.9],
+                [-1.0, -1.0, 0.00],
+            ],
+        ),
     ]
 
     def test_solver_build(self):
@@ -127,33 +192,21 @@ class TestCSolvers(unittest.TestCase):
         # Test builds for non-variable solvers
         for solver_name, solver in self.solvers.items():
             with self.subTest(solver=solver_name):
-                exe = solver._build(model=self.test_model,
-                                    simulation_name=solver_name,
-                                    variable=False,
-                                    debug=False)
+                exe = solver._build(model=self.test_model, simulation_name=solver_name, variable=False, debug=False)
 
-                self.assertTrue(os.path.isfile(exe),
-                                "Built simulation output could not be found or is a directory.")
-                self.assertTrue(os.access(exe, os.X_OK),
-                                "Built simulation binaries are not executable.")
+                self.assertTrue(os.path.isfile(exe), "Built simulation output could not be found or is a directory.")
+                self.assertTrue(os.access(exe, os.X_OK), "Built simulation binaries are not executable.")
                 solver.build_engine.clean()
-                self.assertFalse(os.path.exists(exe),
-                                 "Simulation output not cleaned up after call to .clean().")
+                self.assertFalse(os.path.exists(exe), "Simulation output not cleaned up after call to .clean().")
 
         # Test builds for variable solvers
         for solver_name, solver in self.solvers_variable.items():
             with self.subTest(solver=solver_name):
-                exe = solver._build(model=self.test_model,
-                                    simulation_name=solver_name,
-                                    variable=True,
-                                    debug=False)
-                self.assertTrue(os.path.isfile(exe),
-                                "Built simulation output could not be found or is a directory.")
-                self.assertTrue(os.access(exe, os.X_OK),
-                                "Built simulation binaries are not executable.")
+                exe = solver._build(model=self.test_model, simulation_name=solver_name, variable=True, debug=False)
+                self.assertTrue(os.path.isfile(exe), "Built simulation output could not be found or is a directory.")
+                self.assertTrue(os.access(exe, os.X_OK), "Built simulation binaries are not executable.")
                 solver.build_engine.clean()
-                self.assertFalse(os.path.exists(exe),
-                                 "Simulation output not cleaned up after call to .clean().")
+                self.assertFalse(os.path.exists(exe), "Simulation output not cleaned up after call to .clean().")
 
     def test_solver_precompile(self):
         """
@@ -162,12 +215,14 @@ class TestCSolvers(unittest.TestCase):
         for solver in self.base_solvers:
             with self.subTest(solver=solver.name):
                 base_solver = solver(model=self.test_model)
-                self.assertIsNotNone(base_solver.build_engine, 
-                                     "Build engine not created at solver's construction")
-                self.assertIsNotNone(base_solver.build_engine.get_executable_path(),
-                                     "Build engine has no associated executable")
-                self.assertTrue(os.access(base_solver.build_engine.get_executable_path(), os.X_OK),
-                                "Solver executable invalid or missing at solver's construction")
+                self.assertIsNotNone(base_solver.build_engine, "Build engine not created at solver's construction")
+                self.assertIsNotNone(
+                    base_solver.build_engine.get_executable_path(), "Build engine has no associated executable"
+                )
+                self.assertTrue(
+                    os.access(base_solver.build_engine.get_executable_path(), os.X_OK),
+                    "Solver executable invalid or missing at solver's construction",
+                )
 
     def test_solver_expressions(self):
         """
@@ -194,15 +249,17 @@ class TestCSolvers(unittest.TestCase):
         def test_expressions(expressions: "list[ExpressionTestCase]", use_bool=False):
             for entry in expressions:
                 expression = ExpressionConverter.convert_str(entry.expression)
-                expr = Expression(namespace={
-                    **SanitizedModel.reserved_names,
-                    **SanitizedModel.function_map,
-                    **entry.args,
-                })
+                expr = Expression(
+                    namespace={
+                        **SanitizedModel.reserved_names,
+                        **SanitizedModel.function_map,
+                        **entry.args,
+                    }
+                )
                 cpp_expr = expr.getexpr_cpp(expression)
-                with self.subTest(msg="Evaluating converted C expressions",
-                                  expression=entry.expression,
-                                  c_expression=cpp_expr):
+                with self.subTest(
+                    msg="Evaluating converted C expressions", expression=entry.expression, c_expression=cpp_expr
+                ):
                     py_args = ",".join(entry.args.keys())
                     py_func = eval(f"lambda {py_args}: {expression}")
 
@@ -226,4 +283,5 @@ class TestCSolvers(unittest.TestCase):
 
         finally:
             import shutil
+
             shutil.rmtree(tmpdir)

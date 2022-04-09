@@ -17,12 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 import sys
-sys.path.insert(0,'..')
+
+sys.path.insert(0, "..")
 
 try:
     from tqdm import tqdm, trange
 except ImportError:
-    raise ImportError('tqdm is required. Please install it.')
+    raise ImportError("tqdm is required. Please install it.")
 from itertools import product
 from timeit import default_timer as timer
 import matplotlib.pyplot as plt
@@ -30,19 +31,31 @@ import os.path
 import numpy as np
 import pickle
 import gillespy2
-#BasicSSASolver
+
+# BasicSSASolver
 from gillespy2.solvers.numpy import *
-#BasicODESolver, BasicRootSolver, BasicTauLeapingSolver, NumPySSASolver, TauLeapingSolver
+
+# BasicODESolver, BasicRootSolver, BasicTauLeapingSolver, NumPySSASolver, TauLeapingSolver
 from gillespy2.solvers.cpp import *
-#SSACSolver
+
+# SSACSolver
 from gillespy2.solvers.auto import *
-#SSASolver
+
+# SSASolver
 from gillespy2.solvers.stochkit import *
-#StochKitODESolver, StochKitSolver
+
+# StochKitODESolver, StochKitSolver
 
 
-def timed_trials(models, solvers, trajectories, number_trials=30, override_number_trials={}, precompile_solvers=True,
-                 output_file=None):
+def timed_trials(
+    models,
+    solvers,
+    trajectories,
+    number_trials=30,
+    override_number_trials={},
+    precompile_solvers=True,
+    output_file=None,
+):
     """
     Runs a series of timed trials with a given set of GillesPy models and solvers.
     :param models: the list of models for the timed trials.
@@ -64,23 +77,34 @@ def timed_trials(models, solvers, trajectories, number_trials=30, override_numbe
             trials = override_number_trials[solver.name]
         if precompile_solvers and issubclass(solver, SSACSolver):
             solver = solver(model)
-        timing_data[model.name][solver.name] = np.zeros((len(trajectories), 1+trials))
+        timing_data[model.name][solver.name] = np.zeros((len(trajectories), 1 + trials))
         for trajectory_i, trajectory in enumerate(trajectories):
             times = timing_data[model.name][solver.name][trajectory_i]
             times[0] = trajectory
-            for i in trange(trials, desc = 'Model: {}, Solver: {}, Trajectories: {}'.format(model.name, solver.name, trajectory)):
+            for i in trange(
+                trials, desc="Model: {}, Solver: {}, Trajectories: {}".format(model.name, solver.name, trajectory)
+            ):
                 start = timer()
                 model.run(solver=solver, number_of_trajectories=trajectory)
                 stop = timer()
-                times[1+i] = stop - start
+                times[1 + i] = stop - start
             if output_file is not None:
-                with open(output_file, 'wb') as f:
+                with open(output_file, "wb") as f:
                     pickle.dump(timing_data, f)
     return timing_data
 
 
-def plot_solver_run_times(timing_data, ylabel='Average seconds', reduce=np.mean, line_styles={}, transformation=None,
-                          model_names=None, solver_names=None, baseline_solver_name=None, output_directory=None):
+def plot_solver_run_times(
+    timing_data,
+    ylabel="Average seconds",
+    reduce=np.mean,
+    line_styles={},
+    transformation=None,
+    model_names=None,
+    solver_names=None,
+    baseline_solver_name=None,
+    output_directory=None,
+):
     """
     Plots matplotlib graphs comparing each solver's execution time for each model.
     :param timing_data: the timing data returned from a call to timed_trials().
@@ -98,8 +122,8 @@ def plot_solver_run_times(timing_data, ylabel='Average seconds', reduce=np.mean,
         model_names = timing_data.keys()
     for model in model_names:
         plt.figure()
-        plt.title('{} Timing Results'.format(model))
-        plt.xlabel('Trajectories')
+        plt.title("{} Timing Results".format(model))
+        plt.xlabel("Trajectories")
         plt.ylabel(ylabel)
         baseline = None
         if baseline_solver_name is not None:
@@ -109,7 +133,7 @@ def plot_solver_run_times(timing_data, ylabel='Average seconds', reduce=np.mean,
         if solver_names is None:
             solver_names = timing_data[model].keys()
         for solver in solver_names:
-            trajectories = timing_data[model][solver][:,0]
+            trajectories = timing_data[model][solver][:, 0]
             times = reduce(timing_data[model][solver][:, 1:], axis=1)
             if transformation is not None:
                 times = transformation(times)
@@ -119,7 +143,7 @@ def plot_solver_run_times(timing_data, ylabel='Average seconds', reduce=np.mean,
                 plt.plot(trajectories, times, line_styles[solver], label=solver)
             else:
                 plt.plot(trajectories, times, label=solver)
-        plt.legend(loc='best')
+        plt.legend(loc="best")
         if output_directory is not None:
-            filename = '{}TimingResults{}.png'.format(model, ylabel.replace(' ', '_'))
+            filename = "{}TimingResults{}.png".format(model, ylabel.replace(" ", "_"))
             plt.savefig(os.path.join(output_directory, filename))

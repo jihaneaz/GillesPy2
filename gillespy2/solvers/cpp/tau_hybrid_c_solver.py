@@ -1,13 +1,15 @@
+from typing import Union
+
+import numpy as np
+
 import gillespy2
+from gillespy2.core import Event, GillesPySolver, Model, RateRule, Results
+from gillespy2.core.gillespyError import *
+from gillespy2.solvers.cpp.build.template_gen import SanitizedModel
 from gillespy2.solvers.cpp.c_decoder import IterativeSimDecoder
 from gillespy2.solvers.utilities import solverutils as cutils
-from gillespy2.core import GillesPySolver, Model, Event, RateRule
-from gillespy2.core.gillespyError import *
-from typing import Union
-from gillespy2.core import Results
-
 from .c_solver import CSolver, SimulationReturnCode
-from gillespy2.solvers.cpp.build.template_gen import SanitizedModel
+
 
 class TauHybridCSolver(GillesPySolver, CSolver):
     name = "TauHybridCSolver"
@@ -74,10 +76,8 @@ class TauHybridCSolver(GillesPySolver, CSolver):
         assign_id = 0
         for event_id, event in enumerate(sanitized_model.model.listOfEvents.values()):
             trigger = sanitized_model.expr.getexpr_cpp(event.trigger.expression)
-            delay = sanitized_model.expr.getexpr_cpp(event.delay) \
-                if event.delay is not None else "0"
-            priority = sanitized_model.expr.getexpr_cpp(event.priority) \
-                if event.priority is not None else "0"
+            delay = sanitized_model.expr.getexpr_cpp(event.delay) if event.delay is not None else "0"
+            priority = sanitized_model.expr.getexpr_cpp(event.priority) if event.priority is not None else "0"
             use_trigger = trigger_mode_types[int(bool(event.use_values_from_trigger_time))]
             use_persist = persist_types[int(bool(event.trigger.persistent))]
             initial_value = initial_value_types[int(bool(event.trigger.value or False))]
@@ -93,32 +93,48 @@ class TauHybridCSolver(GillesPySolver, CSolver):
                     elif variable in sanitized_model.model.listOfParameters:
                         variable = sanitized_model.model.listOfParameters.get(variable)
                     else:
-                        raise ValueError(f"Error in event={event} "
-                                         f"Invalid event assignment {assign}: received name {variable} "
-                                         f"Must match the name of a valid Species or Parameter.")
+                        raise ValueError(
+                            f"Error in event={event} "
+                            f"Invalid event assignment {assign}: received name {variable} "
+                            f"Must match the name of a valid Species or Parameter."
+                        )
 
                 if isinstance(variable, gillespy2.Species):
-                    assign_str = f"SPECIES_ASSIGNMENT(" \
-                                 f"{assign_id},{sanitized_model.species_id.get(variable.name)},{expression})"
+                    assign_str = (
+                        f"SPECIES_ASSIGNMENT("
+                        f"{assign_id},{sanitized_model.species_id.get(variable.name)},{expression})"
+                    )
                 elif isinstance(variable, gillespy2.Parameter):
-                    assign_str = f"VARIABLE_ASSIGNMENT(" \
-                                 f"{assign_id},{sanitized_model.parameter_id.get(variable.name)},{expression})"
+                    assign_str = (
+                        f"VARIABLE_ASSIGNMENT("
+                        f"{assign_id},{sanitized_model.parameter_id.get(variable.name)},{expression})"
+                    )
                 else:
-                    raise ValueError(f"Invalid event assignment {assign}: received variable of type {type(variable)} "
-                                     f"Must be of type str, Species, or Parameter")
+                    raise ValueError(
+                        f"Invalid event assignment {assign}: received variable of type {type(variable)} "
+                        f"Must be of type str, Species, or Parameter"
+                    )
                 assignments.append(str(assign_id))
                 event_assignment_list.append(assign_str)
                 assign_id += 1
             # Check for "None"s
             for a in assignments:
-                if a is None: raise Exception(f"assignment={a} is None in event={event}")
-            if event_id is None: raise Exception(f"event_id is None in event={event}")
-            if trigger is None: raise Exception(f"trigger is None in event={event}")
-            if delay is None: raise Exception(f"delay is None in event={event}")
-            if priority is None: raise Exception(f"priority is None in event={event}")
-            if use_trigger is None: raise Exception(f"use_trigger is None in event={event}")
-            if use_persist is None: raise Exception(f"use_persist is None in event={event}")
-            if initial_value is None: raise Exception(f"initial_value is None in event={event}")
+                if a is None:
+                    raise Exception(f"assignment={a} is None in event={event}")
+            if event_id is None:
+                raise Exception(f"event_id is None in event={event}")
+            if trigger is None:
+                raise Exception(f"trigger is None in event={event}")
+            if delay is None:
+                raise Exception(f"delay is None in event={event}")
+            if priority is None:
+                raise Exception(f"priority is None in event={event}")
+            if use_trigger is None:
+                raise Exception(f"use_trigger is None in event={event}")
+            if use_persist is None:
+                raise Exception(f"use_persist is None in event={event}")
+            if initial_value is None:
+                raise Exception(f"initial_value is None in event={event}")
 
             assignments: "str" = " AND ".join(assignments)
             event_list.append(
@@ -148,8 +164,14 @@ class TauHybridCSolver(GillesPySolver, CSolver):
             RateRule,
         }
 
-    def _build(self, model: "Union[Model, SanitizedModel]", simulation_name: str, variable: bool, debug: bool = False,
-               custom_definitions=None) -> str:
+    def _build(
+        self,
+        model: "Union[Model, SanitizedModel]",
+        simulation_name: str,
+        variable: bool,
+        debug: bool = False,
+        custom_definitions=None,
+    ) -> str:
         variable = variable or len(model.listOfEvents) > 0
         sanitized_model = TauHybridCSolver.__create_options(SanitizedModel(model, variable=variable))
         for rate_rule in model.listOfRateRules.values():
@@ -160,11 +182,26 @@ class TauHybridCSolver(GillesPySolver, CSolver):
         """
         :return: Tuple of strings, denoting all keyword argument for this solvers run() method.
         """
-        return ('model', 't', 'number_of_trajectories', 'timeout', 'increment', 'seed', 'debug', 'profile')
+        return ("model", "t", "number_of_trajectories", "timeout", "increment", "seed", "debug", "profile")
 
-    def run(self=None, model: Model = None, t: int = 20, number_of_trajectories: int = 1, timeout: int = 0,
-            increment: int = None, seed: int = None, debug: bool = False, profile: bool = False, variables={},
-            resume=None, live_output: str = None, live_output_options: dict = {}, tau_step: int = .03, tau_tol=0.03, **kwargs):
+    def run(
+        self=None,
+        model: Model = None,
+        t: int = 20,
+        number_of_trajectories: int = 1,
+        timeout: int = 0,
+        increment: int = None,
+        seed: int = None,
+        debug: bool = False,
+        profile: bool = False,
+        variables={},
+        resume=None,
+        live_output: str = None,
+        live_output_options: dict = {},
+        tau_step: int = 0.03,
+        tau_tol=0.03,
+        **kwargs,
+    ):
 
         if self is None:
             self = TauHybridCSolver(model, resume=resume)
@@ -200,24 +237,24 @@ class TauHybridCSolver(GillesPySolver, CSolver):
 
         if self.variable:
             populations = cutils.update_species_init_values(self.model.listOfSpecies, self.species, variables, resume)
-            parameter_values = cutils.change_param_values(self.model.listOfParameters, self.parameters, self.model.volume, variables)
+            parameter_values = cutils.change_param_values(
+                self.model.listOfParameters, self.parameters, self.model.volume, variables
+            )
 
-            args.update({
-                "init_pop": populations,
-                "parameters": parameter_values
-            })
+            args.update({"init_pop": populations, "parameters": parameter_values})
 
         seed = self._validate_seed(seed)
         if seed is not None:
-            args.update({
-                "seed": seed
-            })
+            args.update({"seed": seed})
 
         if live_output is not None:
-            live_output_options['type'] = live_output
+            live_output_options["type"] = live_output
             display_args = {
-                "model": self.model, "number_of_trajectories": number_of_trajectories, "timeline": np.linspace(0, t, number_timesteps),
-                "live_output_options": live_output_options, "resume": bool(resume)
+                "model": self.model,
+                "number_of_trajectories": number_of_trajectories,
+                "timeline": np.linspace(0, t, number_timesteps),
+                "live_output_options": live_output_options,
+                "resume": bool(resume),
             }
         else:
             display_args = None
@@ -225,14 +262,17 @@ class TauHybridCSolver(GillesPySolver, CSolver):
         args = self._make_args(args)
         if debug:
             args.append("--verbose")
-        decoder = IterativeSimDecoder.create_default(number_of_trajectories, number_timesteps, len(self.model.listOfSpecies))
+        decoder = IterativeSimDecoder.create_default(
+            number_of_trajectories, number_timesteps, len(self.model.listOfSpecies)
+        )
 
         sim_exec = self._build(self.model, self.target, self.variable, False)
         sim_status = self._run(sim_exec, args, decoder, timeout, display_args)
 
         if sim_status == SimulationReturnCode.FAILED:
-            raise gillespyError.ExecutionError("Error encountered while running simulation C++ file:\n"
-                f"Return code: {int(sim_status)}.\n")
+            raise ExecutionError(
+                "Error encountered while running simulation C++ file:\n" f"Return code: {int(sim_status)}.\n"
+            )
 
         trajectories, time_stopped = decoder.get_output()
 

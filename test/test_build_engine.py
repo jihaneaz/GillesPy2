@@ -64,17 +64,19 @@ class TestBuildEngine(unittest.TestCase):
         template_dir = self.build_engine.template_dir
         obj_dir = self.build_engine.obj_dir
 
-        self.assertTrue(str(template_dir.resolve()).startswith(str(Path(self.tmp_dir).resolve())),
-                        "Template directory was not placed in temp directory when cache is disabled")
-        self.assertTrue(str(obj_dir.resolve()).startswith(str(Path(self.tmp_dir).resolve())),
-                        "Dependency obj directory was not placed in temp directory when cache is disabled")
+        self.assertTrue(
+            str(template_dir.resolve()).startswith(str(Path(self.tmp_dir).resolve())),
+            "Template directory was not placed in temp directory when cache is disabled",
+        )
+        self.assertTrue(
+            str(obj_dir.resolve()).startswith(str(Path(self.tmp_dir).resolve())),
+            "Dependency obj directory was not placed in temp directory when cache is disabled",
+        )
 
         # Ensure that the dependencies are cleaned up when .clean() is called.
         self.build_engine.clean()
-        self.assertFalse(template_dir.exists(),
-                         "Template directory was not cleaned up when cache is disabled")
-        self.assertFalse(obj_dir.exists(),
-                         "Dependency obj directory was not cleaned up when cache is disabled")
+        self.assertFalse(template_dir.exists(), "Template directory was not cleaned up when cache is disabled")
+        self.assertFalse(obj_dir.exists(), "Dependency obj directory was not cleaned up when cache is disabled")
 
     def test_clean(self):
         """
@@ -88,8 +90,7 @@ class TestBuildEngine(unittest.TestCase):
         """
         Ensure that the resulting template file exists and was prepared correctly.
         """
-        template_file = self.build_engine.template_dir.joinpath(
-                        self.build_engine.template_definitions_name)
+        template_file = self.build_engine.template_dir.joinpath(self.build_engine.template_definitions_name)
         self.assertTrue(template_file.exists(), "Simulation template header file could not be found")
 
         # Test to ensure the contents of the output template_file contains ONLY macro definitions,
@@ -104,7 +105,8 @@ class TestBuildEngine(unittest.TestCase):
         Should result in an expected definitions file and an executable simulation.
         """
         simulation_file = self.build_engine.output_dir.joinpath(
-            "GillesPy2_Simulation.exe" if os.name == "nt" else "GillesPy2_Simulation.out")
+            "GillesPy2_Simulation.exe" if os.name == "nt" else "GillesPy2_Simulation.out"
+        )
 
         for solver_name in self.solver_names:
             with self.subTest(solver=solver_name):
@@ -114,5 +116,5 @@ class TestBuildEngine(unittest.TestCase):
         self.assertTrue(os.access(str(simulation_file), os.X_OK), "Simulation output is not executable")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

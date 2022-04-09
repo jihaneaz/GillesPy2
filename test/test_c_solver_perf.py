@@ -20,13 +20,13 @@ import unittest
 import os
 import sys
 
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 from profiling import c_profiler
 
-from example_models import Oregonator 
+from example_models import Oregonator
 from example_models import VilarOscillator
-from example_models import Tyson2StateOscillator 
+from example_models import Tyson2StateOscillator
 
 from gillespy2.solvers.cpp import SSACSolver
 from gillespy2.solvers.cpp import ODECSolver
@@ -45,17 +45,11 @@ class MyTestCase(unittest.TestCase):
 
     def setUp(self) -> None:
         self.solvers = {
-            SSACSolver: [
-                Tyson2StateOscillator()
-            ],
-            ODECSolver: [
-                Oregonator()
-            ],
-            TauLeapingCSolver: [
-                VilarOscillator()
-            ],
+            SSACSolver: [Tyson2StateOscillator()],
+            ODECSolver: [Oregonator()],
+            TauLeapingCSolver: [VilarOscillator()],
         }
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

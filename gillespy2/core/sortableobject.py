@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+
 class SortableObject(object):
     """Base class for GillesPy2 objects that are sortable."""
 
@@ -41,11 +42,11 @@ class SortableObject(object):
         return cmp(str(self), str(other))
 
     def __hash__(self):
-        if hasattr(self, '_hash'):
+        if hasattr(self, "_hash"):
             return self._hash
-        if hasattr(self, 'id'):
+        if hasattr(self, "id"):
             self._hash = hash(self.id)
-        elif hasattr(self, 'name'):
+        elif hasattr(self, "name"):
             self._hash = hash(self.name)
         else:
             self._hash = hash(self)

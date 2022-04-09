@@ -24,7 +24,6 @@ from typing import Union
 
 import gillespy2
 from gillespy2.core import Model, gillespyError
-
 from . import template_gen
 from .make import Make
 
